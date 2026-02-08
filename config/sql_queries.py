@@ -180,27 +180,30 @@ ML_ANALYST_QUERIES = {
 
 TECH_SIGNAL_QUERIES = {
     "active_signals_today": """
-        SELECT TOP 5
-            market,
-            ticker,
-            company_name,
-            signal_date,
-            signal_type,
-            signal_strength,
-            signal_status,
-            signal_price,
-            macd_signal,
-            rsi_signal,
-            bb_signal,
-            sma_signal,
-            stoch_signal,
-            fib_signal,
-            pattern_signal
-        FROM signal_tracking_history
-        WHERE signal_date = (
-            SELECT MAX(signal_date) FROM signal_tracking_history
-        )
-        ORDER BY signal_strength DESC
+        SELECT TOP 15
+            v.market,
+            v.ticker,
+            v.company_name,
+            v.signal_date,
+            v.signal_type,
+            v.signal_strength,
+            v.trade_tier,
+            v.signal_price,
+            v.ai_prediction_pct,
+            v.technical_combo,
+            v.macd_signal,
+            v.rsi_signal,
+            v.bb_signal,
+            v.stoch_signal,
+            v.fib_signal,
+            v.pattern_signal
+        FROM vw_PowerBI_AI_Technical_Combos v
+        INNER JOIN (
+            SELECT market, MAX(signal_date) AS max_date
+            FROM vw_PowerBI_AI_Technical_Combos
+            GROUP BY market
+        ) latest ON v.market = latest.market AND v.signal_date = latest.max_date
+        ORDER BY v.signal_strength DESC
     """,
 
     "signal_outcomes_7d": """
@@ -236,109 +239,111 @@ TECH_SIGNAL_QUERIES = {
     """,
 
     "strongest_signals_recent": """
-        SELECT TOP 5
-            market,
-            ticker,
-            company_name,
-            signal_date,
-            signal_type,
-            signal_strength,
-            signal_price,
-            macd_signal,
-            rsi_signal,
-            stoch_signal,
-            fib_signal,
-            pattern_signal
-        FROM signal_tracking_history
-        WHERE signal_date >= DATEADD(DAY, -3, GETDATE())
-            AND signal_strength >= 3
-        ORDER BY signal_strength DESC, signal_date DESC
+        SELECT TOP 15
+            v.market,
+            v.ticker,
+            v.company_name,
+            v.signal_date,
+            v.signal_type,
+            v.signal_strength,
+            v.trade_tier,
+            v.signal_price,
+            v.ai_prediction_pct,
+            v.technical_combo,
+            v.macd_signal,
+            v.rsi_signal,
+            v.stoch_signal,
+            v.fib_signal,
+            v.pattern_signal
+        FROM vw_PowerBI_AI_Technical_Combos v
+        INNER JOIN (
+            SELECT market, MAX(signal_date) AS max_date
+            FROM vw_PowerBI_AI_Technical_Combos
+            GROUP BY market
+        ) latest ON v.market = latest.market AND v.signal_date = latest.max_date
+        WHERE v.signal_strength >= 2
+        ORDER BY v.signal_strength DESC, v.market
     """,
 }
 
 # =============================================================================
 # Agent 4: Strategy & Trade Agent Queries
+# (Uses vw_PowerBI_AI_Technical_Combos -- the live view with TIER classifications)
 # =============================================================================
 
 STRATEGY_TRADE_QUERIES = {
     "top_tier1_opportunities": """
-        SELECT TOP 10
-            ticker,
-            market,
-            company_name,
-            prediction_date,
-            ai_direction,
-            predicted_change_pct,
-            ai_confidence,
-            tech_direction,
-            tech_score,
-            system_agreement,
-            combined_score,
-            trade_tier,
-            stop_loss_price,
-            take_profit_price,
-            position_size_pct,
-            risk_level,
-            risk_reward_ratio,
-            current_price,
-            warning_flag
-        FROM strategy1_tracking
-        WHERE trade_tier = 'TIER 1'
-            AND report_date = (
-                SELECT MAX(report_date) FROM strategy1_tracking
-            )
-        ORDER BY combined_score DESC
+        SELECT TOP 15
+            v.market,
+            v.ticker,
+            v.company_name,
+            v.signal_date,
+            v.signal_type,
+            v.signal_strength,
+            v.trade_tier,
+            v.ai_prediction_pct,
+            v.technical_combo,
+            v.signal_price,
+            v.macd_signal,
+            v.rsi_signal,
+            v.bb_signal,
+            v.stoch_signal,
+            v.fib_signal,
+            v.pattern_signal
+        FROM vw_PowerBI_AI_Technical_Combos v
+        INNER JOIN (
+            SELECT market, MAX(signal_date) AS max_date
+            FROM vw_PowerBI_AI_Technical_Combos
+            GROUP BY market
+        ) latest ON v.market = latest.market AND v.signal_date = latest.max_date
+        WHERE v.trade_tier LIKE 'TIER 1%'
+        ORDER BY v.signal_strength DESC, ABS(v.ai_prediction_pct) DESC
     """,
 
     "top_tier2_opportunities": """
-        SELECT TOP 5
-            ticker,
-            market,
-            company_name,
-            prediction_date,
-            ai_direction,
-            predicted_change_pct,
-            ai_confidence,
-            tech_direction,
-            tech_score,
-            system_agreement,
-            combined_score,
-            trade_tier,
-            stop_loss_price,
-            take_profit_price,
-            position_size_pct,
-            risk_level,
-            risk_reward_ratio,
-            current_price,
-            warning_flag
-        FROM strategy1_tracking
-        WHERE trade_tier = 'TIER 2'
-            AND report_date = (
-                SELECT MAX(report_date) FROM strategy1_tracking
-            )
-        ORDER BY combined_score DESC
+        SELECT TOP 15
+            v.market,
+            v.ticker,
+            v.company_name,
+            v.signal_date,
+            v.signal_type,
+            v.signal_strength,
+            v.trade_tier,
+            v.ai_prediction_pct,
+            v.technical_combo,
+            v.signal_price,
+            v.macd_signal,
+            v.rsi_signal,
+            v.stoch_signal,
+            v.fib_signal,
+            v.pattern_signal
+        FROM vw_PowerBI_AI_Technical_Combos v
+        INNER JOIN (
+            SELECT market, MAX(signal_date) AS max_date
+            FROM vw_PowerBI_AI_Technical_Combos
+            GROUP BY market
+        ) latest ON v.market = latest.market AND v.signal_date = latest.max_date
+        WHERE v.trade_tier LIKE 'TIER 2%'
+        ORDER BY v.signal_strength DESC, ABS(v.ai_prediction_pct) DESC
     """,
 
-    "aligned_signals_today": """
+    "tier_summary_today": """
         SELECT
-            ticker,
-            market,
-            company_name,
-            ai_direction,
-            predicted_change_pct,
-            ai_confidence,
-            tech_direction,
-            tech_score,
-            combined_score,
-            trade_tier,
-            risk_reward_ratio,
-            current_price
-        FROM strategy1_tracking
-        WHERE system_agreement = 'ALIGNED'
-            AND report_date = (
-                SELECT MAX(report_date) FROM strategy1_tracking
-            )
-        ORDER BY combined_score DESC
+            v.market,
+            v.trade_tier,
+            COUNT(*) AS total_signals,
+            SUM(CASE WHEN v.signal_type = 'BULLISH' THEN 1 ELSE 0 END) AS bullish_count,
+            SUM(CASE WHEN v.signal_type = 'BEARISH' THEN 1 ELSE 0 END) AS bearish_count,
+            ROUND(AVG(CAST(v.ai_prediction_pct AS FLOAT)), 2) AS avg_ai_prediction_pct,
+            AVG(v.signal_strength) AS avg_signal_strength
+        FROM vw_PowerBI_AI_Technical_Combos v
+        INNER JOIN (
+            SELECT market, MAX(signal_date) AS max_date
+            FROM vw_PowerBI_AI_Technical_Combos
+            GROUP BY market
+        ) latest ON v.market = latest.market AND v.signal_date = latest.max_date
+        GROUP BY v.market, v.trade_tier
+        ORDER BY v.market, v.trade_tier
     """,
 
     "open_trades": """
@@ -359,21 +364,44 @@ STRATEGY_TRADE_QUERIES = {
         ORDER BY entry_date DESC
     """,
 
-    "strategy_performance_summary": """
-        SELECT
+    "nasdaq_tier1_today": """
+        SELECT TOP 10
+            ticker,
+            company_name,
+            signal_type,
             trade_tier,
-            COUNT(*) AS total_opportunities,
-            SUM(CASE WHEN system_agreement = 'ALIGNED' THEN 1 ELSE 0 END) AS aligned_count,
-            SUM(CASE WHEN system_agreement = 'CONFLICTING' THEN 1 ELSE 0 END) AS conflicting_count,
-            ROUND(AVG(combined_score), 1) AS avg_combined_score,
-            ROUND(AVG(ai_confidence), 1) AS avg_ai_confidence,
-            ROUND(AVG(risk_reward_ratio), 2) AS avg_risk_reward
-        FROM strategy1_tracking
-        WHERE report_date = (
-            SELECT MAX(report_date) FROM strategy1_tracking
-        )
-        GROUP BY trade_tier
-        ORDER BY trade_tier
+            ai_prediction_pct,
+            technical_combo,
+            signal_price,
+            signal_strength
+        FROM vw_PowerBI_AI_Technical_Combos
+        WHERE trade_tier LIKE 'TIER 1%'
+            AND market = 'NASDAQ 100'
+            AND signal_date = (
+                SELECT MAX(signal_date) FROM vw_PowerBI_AI_Technical_Combos
+                WHERE market = 'NASDAQ 100'
+            )
+        ORDER BY signal_strength DESC, ABS(ai_prediction_pct) DESC
+    """,
+
+    "nse_tier1_today": """
+        SELECT TOP 10
+            ticker,
+            company_name,
+            signal_type,
+            trade_tier,
+            ai_prediction_pct,
+            technical_combo,
+            signal_price,
+            signal_strength
+        FROM vw_PowerBI_AI_Technical_Combos
+        WHERE trade_tier LIKE 'TIER 1%'
+            AND market = 'NSE 500'
+            AND signal_date = (
+                SELECT MAX(signal_date) FROM vw_PowerBI_AI_Technical_Combos
+                WHERE market = 'NSE 500'
+            )
+        ORDER BY signal_strength DESC, ABS(ai_prediction_pct) DESC
     """,
 }
 
@@ -525,5 +553,124 @@ RISK_QUERIES = {
             SUM(CASE WHEN current_status = 'ACTIVE' THEN purchase_value ELSE 0 END) AS total_active_value
         FROM family_assets
         GROUP BY asset_type
+    """,
+}
+
+# =============================================================================
+# Cross-Strategy Analysis Queries
+# (Finds common recommendations between Strategy 1 and Strategy 2)
+# =============================================================================
+
+CROSS_STRATEGY_QUERIES = {
+    "common_stocks_both_strategies": """
+        WITH s1_best AS (
+            SELECT
+                s1.market,
+                s1.ticker,
+                s1.signal_type,
+                s1.trade_tier,
+                ROUND(CAST(s1.ai_prediction_pct AS FLOAT), 2) AS ai_prediction_pct,
+                s1.technical_combo,
+                ROW_NUMBER() OVER (
+                    PARTITION BY s1.ticker
+                    ORDER BY ABS(CAST(s1.ai_prediction_pct AS FLOAT)) DESC
+                ) AS rn
+            FROM vw_PowerBI_AI_Technical_Combos s1
+            INNER JOIN (
+                SELECT market, MAX(signal_date) AS max_date
+                FROM vw_PowerBI_AI_Technical_Combos
+                GROUP BY market
+            ) latest ON s1.market = latest.market AND s1.signal_date = latest.max_date
+            WHERE s1.trade_tier LIKE 'TIER 1%'
+        )
+        SELECT
+            s2.market,
+            s1b.ticker,
+            s2.company,
+            s1b.signal_type AS s1_direction,
+            s1b.trade_tier AS s1_tier,
+            s1b.ai_prediction_pct AS s1_ai_pct,
+            s1b.technical_combo AS s1_tech_combo,
+            s2.ml_signal AS s2_signal,
+            s2.trade_grade AS s2_grade,
+            ROUND(s2.ml_confidence_pct, 1) AS s2_confidence_pct,
+            s2.opportunity_score AS s2_score,
+            s2.recommended_action AS s2_action,
+            CASE
+                WHEN (s1b.signal_type = 'BEARISH' AND s2.ml_signal = 'Sell')
+                  OR (s1b.signal_type = 'BULLISH' AND s2.ml_signal = 'Buy')
+                THEN 'ALIGNED'
+                ELSE 'CONFLICTING'
+            END AS cross_strategy_agreement
+        FROM vw_strategy2_trade_opportunities s2
+        INNER JOIN s1_best s1b ON s2.ticker = s1b.ticker AND s1b.rn = 1
+        WHERE s2.prediction_date = (
+            SELECT MAX(prediction_date) FROM vw_strategy2_trade_opportunities
+            WHERE market IN ('NASDAQ', 'NSE')
+        )
+        AND s2.trade_grade IN ('A - STRONG SHORT', 'A - STRONG LONG', 'B - GOOD SHORT', 'B - GOOD LONG')
+        ORDER BY s2_confidence_pct DESC
+    """,
+
+    "common_stocks_summary": """
+        WITH s1_best AS (
+            SELECT
+                s1.ticker,
+                s1.signal_type,
+                ROW_NUMBER() OVER (
+                    PARTITION BY s1.ticker
+                    ORDER BY ABS(CAST(s1.ai_prediction_pct AS FLOAT)) DESC
+                ) AS rn
+            FROM vw_PowerBI_AI_Technical_Combos s1
+            INNER JOIN (
+                SELECT market, MAX(signal_date) AS max_date
+                FROM vw_PowerBI_AI_Technical_Combos
+                GROUP BY market
+            ) latest ON s1.market = latest.market AND s1.signal_date = latest.max_date
+            WHERE s1.trade_tier LIKE 'TIER 1%'
+        )
+        SELECT
+            cross_agreement,
+            COUNT(*) AS total_stocks,
+            ROUND(AVG(s2_confidence), 1) AS avg_s2_confidence
+        FROM (
+            SELECT
+                s2.ticker,
+                ROUND(s2.ml_confidence_pct, 1) AS s2_confidence,
+                CASE
+                    WHEN (s1b.signal_type = 'BEARISH' AND s2.ml_signal = 'Sell')
+                      OR (s1b.signal_type = 'BULLISH' AND s2.ml_signal = 'Buy')
+                    THEN 'ALIGNED'
+                    ELSE 'CONFLICTING'
+                END AS cross_agreement
+            FROM vw_strategy2_trade_opportunities s2
+            INNER JOIN s1_best s1b ON s2.ticker = s1b.ticker AND s1b.rn = 1
+            WHERE s2.prediction_date = (
+                SELECT MAX(prediction_date) FROM vw_strategy2_trade_opportunities
+                WHERE market IN ('NASDAQ', 'NSE')
+            )
+            AND s2.trade_grade IN ('A - STRONG SHORT', 'A - STRONG LONG', 'B - GOOD SHORT', 'B - GOOD LONG')
+        ) sub
+        GROUP BY cross_agreement
+    """,
+
+    "forex_strategy2_signals": """
+        SELECT TOP 10
+            ticker,
+            company,
+            ml_signal,
+            ml_direction,
+            ROUND(ml_confidence_pct, 1) AS confidence_pct,
+            trade_grade,
+            opportunity_score,
+            recommended_action,
+            rsi_category
+        FROM vw_strategy2_trade_opportunities
+        WHERE market = 'Forex'
+            AND prediction_date = (
+                SELECT MAX(prediction_date) FROM vw_strategy2_trade_opportunities
+                WHERE market = 'Forex'
+            )
+        ORDER BY opportunity_score DESC, ml_confidence_pct DESC
     """,
 }
