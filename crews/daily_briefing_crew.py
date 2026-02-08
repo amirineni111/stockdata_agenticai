@@ -26,7 +26,7 @@ from agents.risk_agent import create_risk_agent
 
 from config.settings import (
     SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD,
-    EMAIL_FROM, EMAIL_TO,
+    EMAIL_FROM, EMAIL_FROM_NAME, EMAIL_TO,
 )
 
 
@@ -97,7 +97,7 @@ def _compile_and_send_email(agent_results: dict, today: str) -> str:
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
-        msg["From"] = EMAIL_FROM
+        msg["From"] = f"{EMAIL_FROM_NAME} <{EMAIL_FROM}>" if EMAIL_FROM_NAME else EMAIL_FROM
         msg["To"] = EMAIL_TO
 
         html_part = MIMEText(html_content, "html")

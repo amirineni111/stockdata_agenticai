@@ -16,6 +16,7 @@ from config.settings import (
     SMTP_USERNAME,
     SMTP_PASSWORD,
     EMAIL_FROM,
+    EMAIL_FROM_NAME,
     EMAIL_TO,
 )
 
@@ -44,7 +45,7 @@ class SendEmailTool(BaseTool):
         try:
             msg = MIMEMultipart("alternative")
             msg["Subject"] = subject
-            msg["From"] = EMAIL_FROM
+            msg["From"] = f"{EMAIL_FROM_NAME} <{EMAIL_FROM}>" if EMAIL_FROM_NAME else EMAIL_FROM
             msg["To"] = EMAIL_TO
 
             # Attach the HTML body
