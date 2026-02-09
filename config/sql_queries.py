@@ -172,6 +172,77 @@ ML_ANALYST_QUERIES = {
         )
         ORDER BY model_confidence DESC
     """,
+
+    # --- Strategy 1: ML Classifier Model Health (ml_trading_predictions) ---
+
+    "strategy1_nasdaq_ml_summary": """
+        SELECT TOP 1
+            s.run_date AS latest_date,
+            s.total_predictions,
+            s.buy_signals,
+            s.sell_signals,
+            s.high_confidence_count,
+            ROUND(s.avg_confidence, 1) AS avg_confidence,
+            s.bullish_macd_count,
+            s.bearish_macd_count,
+            s.uptrend_count,
+            s.downtrend_count,
+            s.sideways_count
+        FROM ml_prediction_summary s
+        ORDER BY s.run_date DESC
+    """,
+
+    "strategy1_nse_ml_summary": """
+        SELECT TOP 1
+            s.analysis_date AS latest_date,
+            s.total_predictions,
+            s.total_buy_signals AS buy_signals,
+            s.total_sell_signals AS sell_signals,
+            s.high_confidence_count,
+            s.medium_confidence_count,
+            s.low_confidence_count,
+            ROUND(s.avg_confidence, 3) AS avg_confidence,
+            s.market_trend,
+            s.model_accuracy,
+            s.success_rate_1d,
+            s.success_rate_5d,
+            s.success_rate_10d,
+            s.total_stocks_processed
+        FROM ml_nse_predict_summary s
+        ORDER BY s.analysis_date DESC
+    """,
+
+    # --- Strategy 1: Forex ML Classifier Health (forex_ml_predictions) ---
+
+    "strategy1_forex_ml_summary": """
+        SELECT
+            predicted_signal,
+            COUNT(*) AS total_predictions,
+            ROUND(CAST(AVG(signal_confidence) AS FLOAT) * 100, 1) AS avg_confidence_pct,
+            ROUND(CAST(AVG(prob_buy) AS FLOAT), 3) AS avg_prob_buy,
+            ROUND(CAST(AVG(prob_sell) AS FLOAT), 3) AS avg_prob_sell,
+            ROUND(CAST(AVG(prob_hold) AS FLOAT), 3) AS avg_prob_hold,
+            MAX(prediction_date) AS latest_date
+        FROM forex_ml_predictions
+        WHERE prediction_date = (SELECT MAX(prediction_date) FROM forex_ml_predictions)
+        GROUP BY predicted_signal
+    """,
+
+    "strategy1_forex_ml_accuracy": """
+        SELECT
+            predicted_signal,
+            COUNT(*) AS total,
+            SUM(CASE WHEN direction_correct_1d = 1 THEN 1 ELSE 0 END) AS correct_1d,
+            ROUND(
+                CAST(SUM(CASE WHEN direction_correct_1d = 1 THEN 1 ELSE 0 END) AS FLOAT)
+                / NULLIF(COUNT(CASE WHEN direction_correct_1d IS NOT NULL THEN 1 END), 0) * 100, 1
+            ) AS accuracy_1d_pct,
+            ROUND(CAST(AVG(signal_confidence) AS FLOAT) * 100, 1) AS avg_confidence_pct
+        FROM forex_ml_predictions
+        WHERE prediction_date >= DATEADD(DAY, -7, (SELECT MAX(prediction_date) FROM forex_ml_predictions))
+            AND direction_correct_1d IS NOT NULL
+        GROUP BY predicted_signal
+    """,
 }
 
 # =============================================================================
@@ -403,6 +474,51 @@ STRATEGY_TRADE_QUERIES = {
             )
         ORDER BY signal_strength DESC, ABS(ai_prediction_pct) DESC
     """,
+
+    # --- Strategy 1 ML Classifier: Top Buy/Sell Signals ---
+
+    "strategy1_nasdaq_top_signals": """
+        SELECT TOP 10
+            ticker,
+            company,
+            trading_date,
+            predicted_signal,
+            ROUND(confidence_percentage, 1) AS confidence_pct,
+            signal_strength,
+            ROUND(RSI, 1) AS rsi,
+            rsi_category,
+            ROUND(buy_probability, 3) AS buy_prob,
+            ROUND(sell_probability, 3) AS sell_prob,
+            ROUND(CAST(close_price AS FLOAT), 2) AS close_price
+        FROM ml_trading_predictions
+        WHERE trading_date = (SELECT MAX(trading_date) FROM ml_trading_predictions)
+            AND signal_strength IN ('Strong', 'Moderate')
+        ORDER BY confidence_percentage DESC
+    """,
+
+    "strategy1_nse_top_signals": """
+        SELECT TOP 10
+            t.ticker,
+            t.company,
+            t.trading_date,
+            t.predicted_signal,
+            ROUND(t.confidence_percentage, 1) AS confidence_pct,
+            t.signal_strength,
+            ROUND(t.rsi, 1) AS rsi,
+            t.rsi_category,
+            ROUND(t.buy_probability, 3) AS buy_prob,
+            ROUND(t.sell_probability, 3) AS sell_prob,
+            ROUND(CAST(t.close_price AS FLOAT), 2) AS close_price,
+            t.model_name,
+            t.sector
+        FROM ml_nse_trading_predictions t
+        INNER JOIN (
+            SELECT MAX(trading_date) AS max_date FROM ml_nse_trading_predictions
+        ) latest ON t.trading_date = latest.max_date
+        WHERE t.signal_strength IN ('Strong', 'Moderate')
+            AND t.high_confidence = 1
+        ORDER BY t.confidence_percentage DESC
+    """,
 }
 
 # =============================================================================
@@ -432,15 +548,15 @@ FOREX_QUERIES = {
     """,
 
     "forex_ml_predictions_latest": """
-        SELECT TOP 5
+        SELECT
             currency_pair,
             prediction_date,
-            close_price,
+            CAST(close_price AS FLOAT) AS close_price,
             predicted_signal,
-            signal_confidence,
-            prob_buy,
-            prob_sell,
-            prob_hold,
+            ROUND(CAST(signal_confidence AS FLOAT) * 100, 1) AS confidence_pct,
+            ROUND(CAST(prob_buy AS FLOAT), 3) AS prob_buy,
+            ROUND(CAST(prob_sell AS FLOAT), 3) AS prob_sell,
+            ROUND(CAST(prob_hold AS FLOAT), 3) AS prob_hold,
             model_name,
             model_version
         FROM forex_ml_predictions
@@ -448,6 +564,19 @@ FOREX_QUERIES = {
             SELECT MAX(prediction_date) FROM forex_ml_predictions
         )
         ORDER BY signal_confidence DESC
+    """,
+
+    "forex_ml_signal_summary": """
+        SELECT
+            predicted_signal,
+            COUNT(*) AS total_pairs,
+            ROUND(CAST(AVG(signal_confidence) AS FLOAT) * 100, 1) AS avg_confidence_pct,
+            STRING_AGG(currency_pair, ', ') AS pairs
+        FROM forex_ml_predictions
+        WHERE prediction_date = (
+            SELECT MAX(prediction_date) FROM forex_ml_predictions
+        )
+        GROUP BY predicted_signal
     """,
 
     "forex_weekly_trend": """
@@ -503,46 +632,66 @@ RISK_QUERIES = {
     """,
 
     "high_risk_positions": """
-        SELECT
-            ticker,
-            market,
-            company_name,
-            ai_direction,
-            predicted_change_pct,
-            ai_confidence,
-            system_agreement,
-            risk_level,
-            risk_reward_ratio,
-            warning_flag,
-            current_price,
-            stop_loss_price,
-            model_disagreement
-        FROM strategy1_tracking
-        WHERE risk_level = 'HIGH'
-            AND report_date = (
-                SELECT MAX(report_date) FROM strategy1_tracking
-            )
-        ORDER BY model_disagreement DESC
+        SELECT TOP 15
+            s2.market,
+            s2.ticker,
+            s2.company,
+            s2.ml_signal,
+            s2.ml_direction,
+            ROUND(s2.ml_confidence_pct, 1) AS ml_confidence_pct,
+            s2.trade_grade,
+            s2.rsi_category,
+            s2.rsi_assessment,
+            s2.recommended_action,
+            s2.tech_signal,
+            s2.tech_signal_strength,
+            CASE
+                WHEN s2.signals_aligned = 0 THEN 'CONFLICTING'
+                ELSE 'ALIGNED'
+            END AS signal_alignment,
+            s2.opportunity_score
+        FROM vw_strategy2_trade_opportunities s2
+        WHERE s2.prediction_date = (
+            SELECT MAX(prediction_date) FROM vw_strategy2_trade_opportunities
+        )
+        AND s2.signals_aligned = 0
+        ORDER BY s2.ml_confidence_pct DESC
     """,
 
     "conflicting_signals": """
-        SELECT
-            ticker,
-            market,
-            company_name,
-            ai_direction,
-            tech_direction,
-            ai_confidence,
-            tech_score,
-            model_disagreement,
-            warning_flag,
-            current_price
-        FROM strategy1_tracking
-        WHERE system_agreement = 'CONFLICTING'
-            AND report_date = (
-                SELECT MAX(report_date) FROM strategy1_tracking
-            )
-        ORDER BY model_disagreement DESC
+        SELECT TOP 15
+            v.market,
+            v.ticker,
+            v.company_name,
+            v.signal_type AS tech_direction,
+            v.ai_prediction_pct,
+            v.trade_tier,
+            v.technical_combo,
+            s2.ml_signal AS ml_direction,
+            ROUND(s2.ml_confidence_pct, 1) AS ml_confidence_pct,
+            s2.trade_grade,
+            CASE
+                WHEN (v.signal_type = 'BEARISH' AND s2.ml_signal = 'Sell')
+                  OR (v.signal_type = 'BULLISH' AND s2.ml_signal = 'Buy')
+                THEN 'ALIGNED'
+                ELSE 'CONFLICTING'
+            END AS cross_strategy_status
+        FROM vw_PowerBI_AI_Technical_Combos v
+        INNER JOIN (
+            SELECT market, MAX(signal_date) AS max_date
+            FROM vw_PowerBI_AI_Technical_Combos
+            GROUP BY market
+        ) latest ON v.market = latest.market AND v.signal_date = latest.max_date
+        INNER JOIN vw_strategy2_trade_opportunities s2
+            ON v.ticker = s2.ticker
+        WHERE s2.prediction_date = (
+            SELECT MAX(prediction_date) FROM vw_strategy2_trade_opportunities
+        )
+        AND (
+            (v.signal_type = 'BEARISH' AND s2.ml_signal = 'Buy')
+            OR (v.signal_type = 'BULLISH' AND s2.ml_signal = 'Sell')
+        )
+        ORDER BY s2.ml_confidence_pct DESC
     """,
 
     "family_assets_summary": """

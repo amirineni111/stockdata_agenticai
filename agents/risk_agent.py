@@ -1,8 +1,9 @@
 """
 Agent 6: Risk Assessment Agent
 Role: Risk Manager
-Evaluates portfolio risk, identifies concentration issues,
-flags warnings and conflicting signals.
+Evaluates risk by finding conflicting signals between Strategy 1
+(ML Classifier) and Strategy 2 (AI + Technical), flags misalignments,
+and reviews portfolio positions.
 """
 
 from crewai import Agent, LLM
@@ -37,22 +38,23 @@ def create_risk_agent() -> Agent:
     agent = Agent(
         role="Risk Manager",
         goal=(
-            "Evaluate the overall risk posture across all markets. "
-            "Identify high-risk positions where model disagreement is high, "
-            "flag CONFLICTING signals where AI and technical analysis disagree, "
-            "review active trading alerts, check portfolio positions and P&L, "
-            "and provide an overall risk summary. Also summarize family assets "
-            "for a holistic wealth view."
+            "Evaluate the overall risk posture by finding positions where "
+            "Strategy 1 (ML Classifier) and Strategy 2 (AI + Technical) "
+            "CONFLICT on direction. Identify stocks where one strategy says "
+            "Buy but the other says Sell. Also check for misaligned signals "
+            "within Strategy 2 (ML signal vs technical signal conflict). "
+            "Provide an overall risk rating based on the number and severity "
+            "of conflicts."
         ),
         backstory=(
-            "You are a certified risk manager (FRM) with experience in "
-            "both institutional and personal portfolio risk management. "
-            "You understand that the biggest risk is not a single bad trade "
-            "but rather hidden correlations, concentration risk, and ignoring "
-            "warning signals. You are meticulous about identifying conflicting "
-            "signals, high model disagreement, and positions approaching "
-            "stop-loss levels. You always present risk in both absolute "
-            "dollar terms and percentage terms."
+            "You are a certified risk manager (FRM) who focuses on finding "
+            "divergences between independent trading systems. When Strategy 1 "
+            "(ML classifier: Overbought/Sell vs Oversold/Buy) disagrees with "
+            "Strategy 2 (AI price prediction + technical combos: BULLISH vs "
+            "BEARISH), that stock is a caution flag. You also look for stocks "
+            "where the ML confidence is high but the technical signal points "
+            "the other way. You always list specific tickers with conflict "
+            "details so the trader knows exactly what to watch out for."
         ),
         tools=[risk_sql_tool, pnl_tool],
         llm=llm,

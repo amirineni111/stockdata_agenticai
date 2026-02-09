@@ -33,12 +33,12 @@ def create_forex_agent() -> Agent:
     agent = Agent(
         role="Forex Market Specialist",
         goal=(
-            "Analyze the latest forex rates and ML predictions for all "
-            "tracked currency pairs. Focus especially on USD/INR trends. "
-            "Report the latest rates, daily changes, position relative to "
-            "50-day and 200-day moving averages, and any ML model signals "
-            "(buy/sell/hold) with their confidence levels. "
-            "Provide a concise forex outlook."
+            "Analyze the latest forex rates and Strategy 1 ML classifier "
+            "predictions (from forex_ml_predictions table) for all tracked "
+            "currency pairs. Focus especially on USD/INR trends. Report the "
+            "latest rates, daily changes, position relative to 50-day and "
+            "200-day moving averages, and the ML Buy/Sell/Hold signals with "
+            "confidence levels for each pair. Provide a concise forex outlook."
         ),
         backstory=(
             "You are an experienced forex analyst covering major and "

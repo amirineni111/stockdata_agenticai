@@ -164,13 +164,17 @@ def run_daily_briefing_with_rate_limiting() -> str:
     agent_results["ml_analysis"] = _run_single_agent(
         agent=ml_analyst_agent,
         task_description=(
-            f"Today is {today}. Run the model_accuracy_last_7_days query. "
-            "Provide a CONCISE scorecard (under 150 words) with:\n"
-            "1. Each model's 7-day accuracy percentage\n"
-            "2. Best performing model\n"
-            "3. Any degradation warnings"
+            f"Today is {today}. Run these queries and provide a CONCISE scorecard (under 300 words):\n"
+            "1. Run model_accuracy_last_7_days - report Strategy 2 AI price-prediction model accuracy\n"
+            "2. Run strategy1_nasdaq_ml_summary - NASDAQ ML classifier daily run stats (from summary table)\n"
+            "3. Run strategy1_nse_ml_summary - NSE ML classifier daily run stats (from summary table)\n"
+            "4. Run strategy1_forex_ml_summary - Forex ML classifier signal counts and confidence\n\n"
+            "Format as TWO sections:\n"
+            "**Strategy 2 (AI Price Predictor)**: Each model accuracy %, best model, degradation warnings\n"
+            "**Strategy 1 (ML Classifier)**: NASDAQ buy/sell counts + confidence, "
+            "NSE buy/sell counts + confidence + accuracy rates, Forex buy/sell counts + confidence"
         ),
-        expected_output="Concise model scorecard under 150 words.",
+        expected_output="Concise dual-strategy model scorecard under 300 words covering NASDAQ, NSE, and Forex.",
     )
 
     print(f"\n--- ML Analysis complete. Pausing {PAUSE_SECONDS}s for rate limit ---")
@@ -211,15 +215,17 @@ def run_daily_briefing_with_rate_limiting() -> str:
     agent_results["strategy"] = _run_single_agent(
         agent=strategy_trade_agent,
         task_description=(
-            f"Today is {today}. Run the top_tier1_opportunities query to find "
-            "today's best trade setups. Also run the tier_summary_today query "
-            "for an overview. Provide a CONCISE summary (under 250 words) with:\n"
-            "1. Total TIER 1 signals breakdown (BULLISH vs BEARISH)\n"
-            "2. Top 5 TIER 1 trade opportunities with ticker, market, direction, "
-            "trade_tier (including win rate), AI prediction %, and technical combo\n"
-            "3. Any notable patterns across the TIER 1 signals"
+            f"Today is {today}. Run these queries and provide a CONCISE summary (under 300 words):\n"
+            "1. Run top_tier1_opportunities - Strategy 2 TIER 1 trade setups\n"
+            "2. Run tier_summary_today - Strategy 2 overview by market\n"
+            "3. Run strategy1_nasdaq_top_signals - Strategy 1 ML classifier top NASDAQ signals\n\n"
+            "Format as TWO sections:\n"
+            "**Strategy 2 (AI + Technical Combos)**: Top 5 TIER 1 with ticker, market, direction, "
+            "trade_tier (win rate), AI prediction %, technical combo\n"
+            "**Strategy 1 (ML Classifier)**: Top 5 NASDAQ Buy/Sell signals with ticker, signal, "
+            "confidence %, RSI category, signal strength"
         ),
-        expected_output="Concise trade opportunities under 250 words with specific tickers and tiers.",
+        expected_output="Concise dual-strategy trade opportunities under 300 words.",
     )
 
     print(f"\n--- Strategy complete. Pausing {PAUSE_SECONDS}s for rate limit ---")
@@ -236,13 +242,17 @@ def run_daily_briefing_with_rate_limiting() -> str:
     agent_results["forex"] = _run_single_agent(
         agent=forex_agent,
         task_description=(
-            f"Today is {today}. Run the forex_latest_rates query. "
-            "Provide a CONCISE summary (under 150 words) with:\n"
+            f"Today is {today}. Run these queries and provide a CONCISE summary (under 200 words):\n"
+            "1. Run forex_latest_rates - current rates and daily changes\n"
+            "2. Run forex_ml_predictions_latest - ML classifier Buy/Sell signals for all pairs\n"
+            "3. Run forex_ml_signal_summary - summary of Buy vs Sell counts\n\n"
+            "Provide:\n"
             "1. USD/INR current rate and daily change\n"
             "2. Key currency pair movements\n"
-            "3. Trend vs moving averages"
+            "3. Forex ML Classifier signals: which pairs are BUY vs SELL with confidence %\n"
+            "4. Trend vs moving averages"
         ),
-        expected_output="Concise forex summary under 150 words.",
+        expected_output="Concise forex summary under 200 words with ML signals.",
     )
 
     print(f"\n--- Forex complete. Pausing {PAUSE_SECONDS}s for rate limit ---")
@@ -259,13 +269,15 @@ def run_daily_briefing_with_rate_limiting() -> str:
     agent_results["risk"] = _run_single_agent(
         agent=risk_agent,
         task_description=(
-            f"Today is {today}. Run the high_risk_positions query. "
-            "Provide a CONCISE summary (under 150 words) with:\n"
-            "1. Number of high-risk positions\n"
-            "2. Key risk warnings\n"
-            "3. Overall risk rating (Low/Medium/High)"
+            f"Today is {today}. Run these queries and provide a CONCISE summary (under 200 words):\n"
+            "1. Run high_risk_positions - find stocks where ML classifier and technical signals CONFLICT\n"
+            "2. Run conflicting_signals - find stocks where Strategy 1 and Strategy 2 disagree on direction\n\n"
+            "Provide:\n"
+            "1. Number of conflicting/misaligned positions across strategies\n"
+            "2. Key caution flags (list specific tickers where strategies disagree)\n"
+            "3. Overall risk rating (Low/Medium/High) based on number of conflicts"
         ),
-        expected_output="Concise risk assessment under 150 words.",
+        expected_output="Concise risk assessment under 200 words with conflict details.",
     )
 
     print(f"\n--- Risk complete. Pausing {PAUSE_SECONDS}s for rate limit ---")

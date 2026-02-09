@@ -1,8 +1,9 @@
 """
 Agent 2: ML Model Analyst Agent
 Role: Machine Learning Performance Analyst
-Evaluates accuracy and health of the 3 ML models
-(Linear Regression, Gradient Boosting, Random Forest).
+Evaluates accuracy and health of:
+  - Strategy 2: AI Price Prediction models (Linear Regression, Gradient Boosting, Random Forest)
+  - Strategy 1: ML Buy/Sell Classifier models (NASDAQ + NSE + Forex)
 """
 
 from crewai import Agent, LLM
@@ -37,20 +38,23 @@ def create_ml_analyst_agent() -> Agent:
     agent = Agent(
         role="Machine Learning Performance Analyst",
         goal=(
-            "Evaluate the prediction accuracy and health of our 3 ML models: "
-            "Linear Regression, Gradient Boosting, and Random Forest. "
-            "Compare their 7-day and 30-day accuracy rates, identify which "
-            "model is performing best and worst, detect any accuracy degradation "
-            "trends, and provide a model health scorecard."
+            "Evaluate BOTH prediction strategies:\n"
+            "Strategy 2 (AI Price Predictor): Accuracy of Linear Regression, "
+            "Gradient Boosting, and Random Forest models for price direction.\n"
+            "Strategy 1 (ML Classifier): Health of Buy/Sell classifier for "
+            "NASDAQ (ml_trading_predictions), NSE (ml_nse_trading_predictions), "
+            "and Forex (forex_ml_predictions) including signal counts, "
+            "confidence levels, and accuracy rates."
         ),
         backstory=(
             "You are a quantitative analyst specializing in ML model monitoring "
-            "for financial prediction systems. You have deep expertise in "
-            "evaluating model performance metrics -- direction accuracy, "
-            "absolute error, percentage error, and model confidence calibration. "
-            "You are especially skilled at detecting when a model is degrading "
-            "before it causes significant losses. You always compare models "
-            "head-to-head with concrete numbers."
+            "for financial prediction systems. You monitor TWO separate strategy "
+            "pipelines: Strategy 2 uses 3 regression models to predict price "
+            "direction (direction_correct metric), while Strategy 1 uses ML "
+            "classifiers to generate Buy/Sell signals with confidence percentages "
+            "for NASDAQ, NSE, and Forex markets. You always report on BOTH "
+            "strategies with concrete numbers across all three markets, "
+            "highlighting any degradation or divergence."
         ),
         tools=[ml_sql_tool, accuracy_tool],
         llm=llm,

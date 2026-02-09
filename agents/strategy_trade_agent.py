@@ -1,8 +1,9 @@
 """
 Agent 4: Strategy & Trade Agent
 Role: Trading Strategy Manager
-Finds the best trade opportunities by combining AI predictions
-with technical signals from strategy1_tracking.
+Finds the best trade opportunities from BOTH strategies:
+  - Strategy 2: AI price prediction + Technical combos (TIER 1/2 classifications)
+  - Strategy 1: ML Buy/Sell classifier top signals (NASDAQ + NSE)
 """
 
 from crewai import Agent, LLM
@@ -37,23 +38,23 @@ def create_strategy_trade_agent() -> Agent:
     agent = Agent(
         role="Trading Strategy Manager",
         goal=(
-            "Find and rank the top trade opportunities for today. "
-            "Focus on TIER 1 and TIER 2 signals where AI predictions "
-            "and technical analysis are ALIGNED. Present each opportunity "
-            "with its ticker, direction (BULLISH/BEARISH), AI confidence, "
-            "technical score, combined score, stop-loss, take-profit, "
-            "risk/reward ratio, and any warning flags. "
-            "Also summarize the overall strategy performance by tier."
+            "Find and rank the top trade opportunities from BOTH strategies:\n"
+            "Strategy 2 (AI + Technical): Focus on TIER 1 signals where AI "
+            "predictions and technical indicators are ALIGNED, with ticker, "
+            "direction, trade_tier, AI prediction %, and technical combo.\n"
+            "Strategy 1 (ML Classifier): Top Buy/Sell signals from the ML "
+            "classifier with ticker, confidence %, RSI category, and strength.\n"
+            "Present both sets of opportunities clearly."
         ),
         backstory=(
-            "You are a senior trading strategist who combines quantitative "
-            "AI model predictions with classical technical analysis to find "
-            "the highest-probability trade setups. You understand that the "
-            "best trades occur when AI predictions and technical indicators "
-            "agree (ALIGNED signals). You are disciplined about risk management "
-            "-- always considering stop-loss, take-profit, position sizing, "
-            "and risk/reward ratios. You flag conflicting signals and high-risk "
-            "setups so the trader can make informed decisions."
+            "You are a senior trading strategist who evaluates TWO independent "
+            "strategy pipelines. Strategy 2 combines AI price prediction models "
+            "with technical indicator combos (MACD, RSI, BB, Stochastic, Fibonacci, "
+            "Pattern) and classifies trades into TIER 1 ULTRA (76-93% win rate) "
+            "and TIER 2 MODERATE tiers. Strategy 1 uses ML classifiers that generate "
+            "Overbought (Sell) / Oversold (Buy) signals with confidence percentages "
+            "and RSI-based categorization. You always present BOTH strategy outputs "
+            "so the trader can see the full picture."
         ),
         tools=[strategy_sql_tool, risk_reward_tool],
         llm=llm,
