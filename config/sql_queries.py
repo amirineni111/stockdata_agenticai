@@ -651,10 +651,12 @@ RISK_QUERIES = {
             END AS signal_alignment,
             s2.opportunity_score
         FROM vw_strategy2_trade_opportunities s2
-        WHERE s2.prediction_date = (
-            SELECT MAX(prediction_date) FROM vw_strategy2_trade_opportunities
-        )
-        AND s2.signals_aligned = 0
+        INNER JOIN (
+            SELECT market, MAX(prediction_date) AS max_date
+            FROM vw_strategy2_trade_opportunities
+            GROUP BY market
+        ) latest ON s2.market = latest.market AND s2.prediction_date = latest.max_date
+        WHERE s2.signals_aligned = 0
         ORDER BY s2.ml_confidence_pct DESC
     """,
 
@@ -671,8 +673,8 @@ RISK_QUERIES = {
             ROUND(s2.ml_confidence_pct, 1) AS ml_confidence_pct,
             s2.trade_grade,
             CASE
-                WHEN (v.signal_type = 'BEARISH' AND s2.ml_signal = 'Sell')
-                  OR (v.signal_type = 'BULLISH' AND s2.ml_signal = 'Buy')
+                WHEN (v.signal_type = 'BEARISH' AND s2.ml_signal IN ('Sell','SELL'))
+                  OR (v.signal_type = 'BULLISH' AND s2.ml_signal IN ('Buy','BUY'))
                 THEN 'ALIGNED'
                 ELSE 'CONFLICTING'
             END AS cross_strategy_status
@@ -684,12 +686,14 @@ RISK_QUERIES = {
         ) latest ON v.market = latest.market AND v.signal_date = latest.max_date
         INNER JOIN vw_strategy2_trade_opportunities s2
             ON v.ticker = s2.ticker
-        WHERE s2.prediction_date = (
-            SELECT MAX(prediction_date) FROM vw_strategy2_trade_opportunities
-        )
-        AND (
-            (v.signal_type = 'BEARISH' AND s2.ml_signal = 'Buy')
-            OR (v.signal_type = 'BULLISH' AND s2.ml_signal = 'Sell')
+        INNER JOIN (
+            SELECT market, MAX(prediction_date) AS max_date
+            FROM vw_strategy2_trade_opportunities
+            GROUP BY market
+        ) s2_latest ON s2.market = s2_latest.market AND s2.prediction_date = s2_latest.max_date
+        WHERE (
+            (v.signal_type = 'BEARISH' AND s2.ml_signal IN ('Buy','BUY'))
+            OR (v.signal_type = 'BULLISH' AND s2.ml_signal IN ('Sell','SELL'))
         )
         ORDER BY s2.ml_confidence_pct DESC
     """,
@@ -730,7 +734,7 @@ CROSS_STRATEGY_QUERIES = {
                 FROM vw_PowerBI_AI_Technical_Combos
                 GROUP BY market
             ) latest ON s1.market = latest.market AND s1.signal_date = latest.max_date
-            WHERE s1.trade_tier LIKE 'TIER 1%'
+            WHERE s1.trade_tier LIKE 'TIER 1%' OR s1.trade_tier LIKE 'TIER 2%'
         )
         SELECT
             s2.market,
@@ -746,18 +750,24 @@ CROSS_STRATEGY_QUERIES = {
             s2.opportunity_score AS s2_score,
             s2.recommended_action AS s2_action,
             CASE
-                WHEN (s1b.signal_type = 'BEARISH' AND s2.ml_signal = 'Sell')
-                  OR (s1b.signal_type = 'BULLISH' AND s2.ml_signal = 'Buy')
+                WHEN (s1b.signal_type = 'BEARISH' AND s2.ml_signal IN ('Sell','SELL'))
+                  OR (s1b.signal_type = 'BULLISH' AND s2.ml_signal IN ('Buy','BUY'))
                 THEN 'ALIGNED'
                 ELSE 'CONFLICTING'
             END AS cross_strategy_agreement
         FROM vw_strategy2_trade_opportunities s2
+        INNER JOIN (
+            SELECT market, MAX(prediction_date) AS max_date
+            FROM vw_strategy2_trade_opportunities
+            GROUP BY market
+        ) s2_latest ON s2.market = s2_latest.market AND s2.prediction_date = s2_latest.max_date
         INNER JOIN s1_best s1b ON s2.ticker = s1b.ticker AND s1b.rn = 1
-        WHERE s2.prediction_date = (
-            SELECT MAX(prediction_date) FROM vw_strategy2_trade_opportunities
-            WHERE market IN ('NASDAQ', 'NSE')
+        WHERE s2.trade_grade IN (
+            'A - HIGH CONVICTION SHORT',
+            'B - GOOD SHORT',
+            'B - STRONG LONG (Use Caution)',
+            'C - MODERATE LONG'
         )
-        AND s2.trade_grade IN ('A - STRONG SHORT', 'A - STRONG LONG', 'B - GOOD SHORT', 'B - GOOD LONG')
         ORDER BY s2_confidence_pct DESC
     """,
 
@@ -776,7 +786,7 @@ CROSS_STRATEGY_QUERIES = {
                 FROM vw_PowerBI_AI_Technical_Combos
                 GROUP BY market
             ) latest ON s1.market = latest.market AND s1.signal_date = latest.max_date
-            WHERE s1.trade_tier LIKE 'TIER 1%'
+            WHERE s1.trade_tier LIKE 'TIER 1%' OR s1.trade_tier LIKE 'TIER 2%'
         )
         SELECT
             cross_agreement,
@@ -787,18 +797,24 @@ CROSS_STRATEGY_QUERIES = {
                 s2.ticker,
                 ROUND(s2.ml_confidence_pct, 1) AS s2_confidence,
                 CASE
-                    WHEN (s1b.signal_type = 'BEARISH' AND s2.ml_signal = 'Sell')
-                      OR (s1b.signal_type = 'BULLISH' AND s2.ml_signal = 'Buy')
+                    WHEN (s1b.signal_type = 'BEARISH' AND s2.ml_signal IN ('Sell','SELL'))
+                      OR (s1b.signal_type = 'BULLISH' AND s2.ml_signal IN ('Buy','BUY'))
                     THEN 'ALIGNED'
                     ELSE 'CONFLICTING'
                 END AS cross_agreement
             FROM vw_strategy2_trade_opportunities s2
+            INNER JOIN (
+                SELECT market, MAX(prediction_date) AS max_date
+                FROM vw_strategy2_trade_opportunities
+                GROUP BY market
+            ) s2_latest ON s2.market = s2_latest.market AND s2.prediction_date = s2_latest.max_date
             INNER JOIN s1_best s1b ON s2.ticker = s1b.ticker AND s1b.rn = 1
-            WHERE s2.prediction_date = (
-                SELECT MAX(prediction_date) FROM vw_strategy2_trade_opportunities
-                WHERE market IN ('NASDAQ', 'NSE')
+            WHERE s2.trade_grade IN (
+                'A - HIGH CONVICTION SHORT',
+                'B - GOOD SHORT',
+                'B - STRONG LONG (Use Caution)',
+                'C - MODERATE LONG'
             )
-            AND s2.trade_grade IN ('A - STRONG SHORT', 'A - STRONG LONG', 'B - GOOD SHORT', 'B - GOOD LONG')
         ) sub
         GROUP BY cross_agreement
     """,
