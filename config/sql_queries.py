@@ -493,6 +493,7 @@ STRATEGY_TRADE_QUERIES = {
         FROM ml_trading_predictions
         WHERE trading_date = (SELECT MAX(trading_date) FROM ml_trading_predictions)
             AND signal_strength IN ('Strong', 'Moderate')
+            AND confidence_percentage >= 60
         ORDER BY confidence_percentage DESC
     """,
 
@@ -517,6 +518,7 @@ STRATEGY_TRADE_QUERIES = {
         ) latest ON t.trading_date = latest.max_date
         WHERE t.signal_strength IN ('Strong', 'Moderate')
             AND t.high_confidence = 1
+            AND t.confidence_percentage >= 60
         ORDER BY t.confidence_percentage DESC
     """,
 }
@@ -563,6 +565,7 @@ FOREX_QUERIES = {
         WHERE prediction_date = (
             SELECT MAX(prediction_date) FROM forex_ml_predictions
         )
+            AND CAST(signal_confidence AS FLOAT) >= 0.55
         ORDER BY signal_confidence DESC
     """,
 
@@ -768,6 +771,13 @@ CROSS_STRATEGY_QUERIES = {
             'B - STRONG LONG (Use Caution)',
             'C - MODERATE LONG'
         )
+        -- Fix 8: Cross-strategy ensemble filter - only show ALIGNED signals
+        -- and require minimum confidence from Strategy 2
+        AND (
+            (s1b.signal_type = 'BEARISH' AND s2.ml_signal IN ('Sell','SELL'))
+            OR (s1b.signal_type = 'BULLISH' AND s2.ml_signal IN ('Buy','BUY'))
+        )
+        AND s2.ml_confidence_pct >= 55
         ORDER BY s2_confidence_pct DESC
     """,
 
@@ -819,23 +829,8 @@ CROSS_STRATEGY_QUERIES = {
         GROUP BY cross_agreement
     """,
 
-    "forex_strategy2_signals": """
-        SELECT TOP 10
-            ticker,
-            company,
-            ml_signal,
-            ml_direction,
-            ROUND(ml_confidence_pct, 1) AS confidence_pct,
-            trade_grade,
-            opportunity_score,
-            recommended_action,
-            rsi_category
-        FROM vw_strategy2_trade_opportunities
-        WHERE market = 'Forex'
-            AND prediction_date = (
-                SELECT MAX(prediction_date) FROM vw_strategy2_trade_opportunities
-                WHERE market = 'Forex'
-            )
-        ORDER BY opportunity_score DESC, ml_confidence_pct DESC
-    """,
+    # forex_strategy2_signals removed:
+    # Forex no longer participates in Strategy 2 (AI Price Predictor).
+    # Forex only uses Strategy 1 ML classification (forex_ml_predictions table).
+    # This avoids conflicting signals and regression model underperformance on FX pairs.
 }
