@@ -294,20 +294,27 @@ def run_daily_briefing_with_rate_limiting() -> str:
     agent_results["cross_strategy"] = _run_single_agent(
         agent=cross_strategy_agent,
         task_description=(
-            f"Today is {today}. Run the common_stocks_both_strategies query "
-            "to find stocks that appear in BOTH Strategy 1 (TIER 1 AI+Technical) "
-            "and Strategy 2 (Grade A/B ML+RSI). Then run common_stocks_summary. "
-            "Provide a CONCISE summary (under 250 words) with:\n"
-            "1. Total number of stocks found in BOTH strategies\n"
-            "2. How many are ALIGNED (same direction) vs CONFLICTING\n"
-            "3. List each common stock with: ticker, market, S1 direction, S1 tier, "
-            "S2 signal, S2 grade, S2 confidence%, and whether ALIGNED or CONFLICTING\n"
-            "4. Highlight the ALIGNED stocks as highest-conviction trades\n"
-            "5. Flag CONFLICTING stocks as caution zones"
+            f"Today is {today}. Run ALL of these queries:\n"
+            "1. common_stocks_both_strategies - NSE cross-strategy matches\n"
+            "2. common_stocks_summary - NSE alignment summary\n"
+            "3. common_stocks_nasdaq - NASDAQ cross-strategy matches\n"
+            "4. common_stocks_nasdaq_summary - NASDAQ alignment summary\n\n"
+            "Provide a CONCISE summary (under 350 words) with TWO sections:\n\n"
+            "**NSE 500 Cross-Strategy:**\n"
+            "- Total stocks in both strategies, ALIGNED vs CONFLICTING count\n"
+            "- Top aligned stocks with ticker, S1 direction, S1 tier, S2 grade, "
+            "S2 confidence%\n\n"
+            "**NASDAQ 100 Cross-Strategy:**\n"
+            "- Total stocks in both strategies, ALIGNED vs CONFLICTING count\n"
+            "- Top aligned stocks with ticker, S1 direction, S1 tier, S2 grade, "
+            "S2 confidence%\n\n"
+            "Highlight ALIGNED stocks as highest-conviction trades. "
+            "Flag CONFLICTING stocks as caution zones."
         ),
         expected_output=(
-            "Concise cross-strategy summary under 250 words listing common stocks "
-            "between both strategies with alignment status."
+            "Concise cross-strategy summary under 350 words covering BOTH NSE and "
+            "NASDAQ markets, listing common stocks between both strategies with "
+            "alignment status."
         ),
     )
 

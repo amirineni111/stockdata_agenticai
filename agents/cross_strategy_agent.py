@@ -36,9 +36,11 @@ def create_cross_strategy_agent() -> Agent:
         goal=(
             "Find stocks that BOTH Strategy 1 (AI + Technical Combos) and "
             "Strategy 2 (ML Forex/Stock classifier) recommend in the same "
-            "direction. These dual-strategy confirmations represent the "
-            "highest-conviction trade opportunities. Also identify stocks "
-            "where the two strategies CONFLICT as caution flags."
+            "direction for BOTH NSE and NASDAQ markets. These dual-strategy "
+            "confirmations represent the highest-conviction trade opportunities. "
+            "Also identify stocks where the two strategies CONFLICT as caution "
+            "flags. Cover NSE using common_stocks_both_strategies and NASDAQ "
+            "using common_stocks_nasdaq."
         ),
         backstory=(
             "You are a quantitative strategist who specializes in multi-signal "
@@ -50,7 +52,10 @@ def create_cross_strategy_agent() -> Agent:
             "ULTRA (76-93% win rate) and TIER 2 MODERATE tiers. Strategy 2 uses "
             "ML classification (Buy/Sell with confidence %) combined with RSI "
             "and assigns trade grades (A through D). When both strategies say "
-            "SELL on the same stock, that's your highest conviction SHORT."
+            "SELL on the same stock, that's your highest conviction SHORT. "
+            "You analyse BOTH NSE and NASDAQ markets separately, using "
+            "common_stocks_both_strategies for NSE and common_stocks_nasdaq "
+            "for NASDAQ, then present combined findings."
         ),
         tools=[cross_sql_tool],
         llm=llm,

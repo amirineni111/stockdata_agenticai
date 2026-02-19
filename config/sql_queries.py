@@ -833,4 +833,124 @@ CROSS_STRATEGY_QUERIES = {
     # Forex no longer participates in Strategy 2 (AI Price Predictor).
     # Forex only uses Strategy 1 ML classification (forex_ml_predictions table).
     # This avoids conflicting signals and regression model underperformance on FX pairs.
+
+    # --- NASDAQ Cross-Strategy: joins AI+Technical Combos with ML classifier ---
+    # (Since vw_strategy2_trade_opportunities only covers NSE, this query joins
+    #  vw_PowerBI_AI_Technical_Combos directly with ml_trading_predictions for NASDAQ.)
+
+    "common_stocks_nasdaq": """
+        WITH s1_best AS (
+            SELECT
+                s1.market,
+                s1.ticker,
+                s1.company_name,
+                s1.signal_type,
+                s1.trade_tier,
+                ROUND(CAST(s1.ai_prediction_pct AS FLOAT), 2) AS ai_prediction_pct,
+                s1.technical_combo,
+                ROW_NUMBER() OVER (
+                    PARTITION BY s1.ticker
+                    ORDER BY ABS(CAST(s1.ai_prediction_pct AS FLOAT)) DESC
+                ) AS rn
+            FROM vw_PowerBI_AI_Technical_Combos s1
+            INNER JOIN (
+                SELECT MAX(signal_date) AS max_date
+                FROM vw_PowerBI_AI_Technical_Combos
+                WHERE market = 'NASDAQ 100'
+            ) latest ON s1.signal_date = latest.max_date
+            WHERE s1.market = 'NASDAQ 100'
+              AND (s1.trade_tier LIKE 'TIER 1%' OR s1.trade_tier LIKE 'TIER 2%')
+        )
+        SELECT
+            'NASDAQ 100' AS market,
+            s1b.ticker,
+            s1b.company_name AS company,
+            s1b.signal_type AS s1_direction,
+            s1b.trade_tier AS s1_tier,
+            s1b.ai_prediction_pct AS s1_ai_pct,
+            s1b.technical_combo AS s1_tech_combo,
+            CASE
+                WHEN m.predicted_signal IN ('Sell', 'SELL', 'Overbought') THEN 'Sell'
+                WHEN m.predicted_signal IN ('Buy', 'BUY', 'Oversold') THEN 'Buy'
+                ELSE m.predicted_signal
+            END AS s2_signal,
+            CASE
+                WHEN m.confidence_percentage >= 70 AND m.signal_strength = 'Strong'
+                    THEN 'A-Grade'
+                WHEN m.confidence_percentage >= 60
+                    THEN 'B-Grade'
+                ELSE 'C-Grade'
+            END AS s2_grade,
+            ROUND(m.confidence_percentage, 1) AS s2_confidence_pct,
+            m.signal_strength AS s2_strength,
+            ROUND(m.RSI, 1) AS s2_rsi,
+            m.rsi_category AS s2_rsi_category,
+            CASE
+                WHEN (s1b.signal_type = 'BEARISH'
+                      AND m.predicted_signal IN ('Sell', 'SELL', 'Overbought'))
+                  OR (s1b.signal_type = 'BULLISH'
+                      AND m.predicted_signal IN ('Buy', 'BUY', 'Oversold'))
+                THEN 'ALIGNED'
+                ELSE 'CONFLICTING'
+            END AS cross_strategy_agreement
+        FROM ml_trading_predictions m
+        INNER JOIN (
+            SELECT MAX(trading_date) AS max_date FROM ml_trading_predictions
+        ) m_latest ON m.trading_date = m_latest.max_date
+        INNER JOIN s1_best s1b ON m.ticker = s1b.ticker AND s1b.rn = 1
+        WHERE m.signal_strength IN ('Strong', 'Moderate')
+          AND m.confidence_percentage >= 55
+          AND (
+              (s1b.signal_type = 'BEARISH'
+               AND m.predicted_signal IN ('Sell', 'SELL', 'Overbought'))
+            OR (s1b.signal_type = 'BULLISH'
+               AND m.predicted_signal IN ('Buy', 'BUY', 'Oversold'))
+          )
+        ORDER BY m.confidence_percentage DESC
+    """,
+
+    "common_stocks_nasdaq_summary": """
+        WITH s1_best AS (
+            SELECT
+                s1.ticker,
+                s1.signal_type,
+                ROW_NUMBER() OVER (
+                    PARTITION BY s1.ticker
+                    ORDER BY ABS(CAST(s1.ai_prediction_pct AS FLOAT)) DESC
+                ) AS rn
+            FROM vw_PowerBI_AI_Technical_Combos s1
+            INNER JOIN (
+                SELECT MAX(signal_date) AS max_date
+                FROM vw_PowerBI_AI_Technical_Combos
+                WHERE market = 'NASDAQ 100'
+            ) latest ON s1.signal_date = latest.max_date
+            WHERE s1.market = 'NASDAQ 100'
+              AND (s1.trade_tier LIKE 'TIER 1%' OR s1.trade_tier LIKE 'TIER 2%')
+        )
+        SELECT
+            cross_agreement,
+            COUNT(*) AS total_stocks,
+            ROUND(AVG(s2_confidence), 1) AS avg_s2_confidence
+        FROM (
+            SELECT
+                m.ticker,
+                ROUND(m.confidence_percentage, 1) AS s2_confidence,
+                CASE
+                    WHEN (s1b.signal_type = 'BEARISH'
+                          AND m.predicted_signal IN ('Sell', 'SELL', 'Overbought'))
+                      OR (s1b.signal_type = 'BULLISH'
+                          AND m.predicted_signal IN ('Buy', 'BUY', 'Oversold'))
+                    THEN 'ALIGNED'
+                    ELSE 'CONFLICTING'
+                END AS cross_agreement
+            FROM ml_trading_predictions m
+            INNER JOIN (
+                SELECT MAX(trading_date) AS max_date FROM ml_trading_predictions
+            ) m_latest ON m.trading_date = m_latest.max_date
+            INNER JOIN s1_best s1b ON m.ticker = s1b.ticker AND s1b.rn = 1
+            WHERE m.signal_strength IN ('Strong', 'Moderate')
+              AND m.confidence_percentage >= 55
+        ) sub
+        GROUP BY cross_agreement
+    """,
 }
