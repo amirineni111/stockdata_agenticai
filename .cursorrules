@@ -1,0 +1,49 @@
+# Cursor Rules — stockdata_agenticai
+
+## Project
+Agentic AI layer of a 7-repo stock trading platform. 7 CrewAI agents query SQL Server and produce a daily HTML email via Claude LLM.
+
+## Stack
+- Python 3.11+, CrewAI ≥0.108.0, Anthropic Claude (claude-sonnet-4-20250514)
+- SQL Server (localhost\MSSQLSERVER01, stockdata_db, Windows Auth, pyodbc)
+- Jinja2 HTML templates, Office 365 SMTP, Flask (A2A servers)
+
+## Architecture Rules
+- READ-ONLY against database — agents never write
+- All SQL in config/sql_queries.py as predefined dicts — no ad-hoc in production
+- Agent factory pattern: create_*_agent() -> crewai.Agent
+- Sequential execution with 60s rate limit pauses between agents
+- report_compiler_agent.py is UNUSED (email via Jinja2 directly)
+- VARCHAR price columns in hist tables — always CAST to FLOAT in SQL
+
+## File Structure
+- config/settings.py — .env loader with typed constants
+- config/sql_queries.py — 37 queries in 7 domain dicts
+- agents/*.py — Agent factories (one per domain)
+- crews/daily_briefing_crew.py — Master orchestrator
+- tools/*.py — CrewAI tool implementations
+- templates/briefing_email.html — Jinja2 email template
+
+## Two Strategies
+- Strategy 1: AI predictions + 6 tech indicators → TIER 1/2 (vw_PowerBI_AI_Technical_Combos)
+- Strategy 2: ML classifier + RSI → Grades A-D (vw_strategy2_trade_opportunities / ml_trading_predictions)
+- Cross-strategy: aligned = both agree, conflicting = disagree
+
+## Ecosystem (same DB)
+- stockanalysis — ETL ingestion
+- sqlserver_copilot — NASDAQ ML
+- sqlserver_copilot_nse — NSE ML
+- sqlserver_copilot_forex — Forex ML
+- sqlserver_mcp — .NET MCP bridge
+- streamlit-trading-dashboard — Viz + signal tracking
+
+## Testing
+- python main.py --test-sql (validates all queries)
+- python main.py --dry-run (runs agents, no email)
+- python main.py --test-email (sends test email)
+
+## Key Tables
+- nasdaq_100_hist_data, nse_500_hist_data, forex_hist_data
+- ml_trading_predictions, ml_nse_trading_predictions, forex_ml_predictions
+- ai_prediction_history, signal_tracking_history
+- vw_PowerBI_AI_Technical_Combos, vw_strategy2_trade_opportunities
