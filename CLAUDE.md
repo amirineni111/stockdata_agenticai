@@ -7,7 +7,7 @@
 
 ## 1. SYSTEM OVERVIEW
 
-This is one of **7 interconnected repositories** that form an end-to-end **AI-powered stock trading analytics platform**. All repos share a single SQL Server database (`stockdata_db`) on `localhost\MSSQLSERVER01`.
+This is one of **7 interconnected repositories** that form an end-to-end **AI-powered stock trading analytics platform**. All repos share a single SQL Server database (`stockdata_db`) on `192.168.87.27\MSSQLSERVER01` (SQL Auth).
 
 ### Repository Map
 
@@ -199,10 +199,11 @@ When both strategies agree on direction → **ALIGNED** (highest conviction). Wh
 ## 6. DATABASE SCHEMA
 
 ### Shared SQL Server
-- **Server**: `localhost\MSSQLSERVER01`
+- **Server**: `192.168.87.27\MSSQLSERVER01` (Machine A LAN IP)
 - **Database**: `stockdata_db`
-- **Auth**: Windows Integrated (`Trusted_Connection=yes`)
+- **Auth**: SQL Auth (`SQL_USERNAME=remote_user`, `SQL_TRUSTED_CONNECTION=no`)
 - **Driver**: ODBC Driver 17 for SQL Server
+- **Note**: Machine A (SQL Server host) can also use `localhost\MSSQLSERVER01` with Windows Auth for local access
 
 ### Tables (29+)
 
@@ -274,12 +275,12 @@ All loaded from `.env` via `python-dotenv` in `config/settings.py`:
 |----------|---------|---------|
 | `ANTHROPIC_API_KEY` | — | Claude API key |
 | `LLM_MODEL` | `claude-sonnet-4-20250514` | Model identifier |
-| `SQL_SERVER` | `localhost` | SQL Server host |
-| `SQL_DATABASE` | — | Database name (`stockdata_db`) |
+| `SQL_SERVER` | `192.168.87.27\MSSQLSERVER01` | SQL Server host (Machine A LAN IP) |
+| `SQL_DATABASE` | `stockdata_db` | Database name |
 | `SQL_DRIVER` | `{ODBC Driver 17 for SQL Server}` | ODBC driver |
-| `SQL_USERNAME` | — | SQL auth (if not Windows) |
-| `SQL_PASSWORD` | — | SQL auth password |
-| `SQL_TRUSTED_CONNECTION` | `yes` | Windows integrated auth |
+| `SQL_USERNAME` | `remote_user` | SQL Auth username |
+| `SQL_PASSWORD` | *(in .env)* | SQL Auth password |
+| `SQL_TRUSTED_CONNECTION` | `no` | SQL Auth (not Windows Auth) |
 | `SMTP_SERVER` | `smtp.office365.com` | Email server |
 | `SMTP_PORT` | `587` | STARTTLS port |
 | `SMTP_USERNAME` | — | Email login |
@@ -386,7 +387,7 @@ Add to `.vscode/mcp.json` or VS Code settings:
     "type": "stdio",
     "command": "C:\\Users\\sreea\\OneDrive\\Desktop\\sqlserver_mcp\\SQL-AI-samples\\MssqlMcp\\dotnet\\MssqlMcp\\bin\\Debug\\net8.0\\MssqlMcp.exe",
     "env": {
-        "CONNECTION_STRING": "Server=localhost\\MSSQLSERVER01;Database=stockdata_db;Trusted_Connection=True;TrustServerCertificate=True"
+        "CONNECTION_STRING": "Server=192.168.87.27\\MSSQLSERVER01;Database=stockdata_db;User Id=remote_user;Password=YourStrongPassword123!;TrustServerCertificate=True"
     }
 }
 ```
