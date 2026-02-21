@@ -1,13 +1,13 @@
 # CLAUDE.md — Stock Data Agentic AI Platform
 
 > **Master project context file for AI assistants (Claude, Copilot, Cursor).**
-> Last updated: February 20, 2026
+> Last updated: February 21, 2026
 
 ---
 
 ## 1. SYSTEM OVERVIEW
 
-This is one of **7 interconnected repositories** that form an end-to-end **AI-powered stock trading analytics platform**. All repos share a single SQL Server database (`stockdata_db`) on `192.168.87.27\MSSQLSERVER01` (SQL Auth).
+This is one of **7 interconnected repositories** that form an end-to-end **AI-powered stock trading analytics platform**. All repos share a single SQL Server database (`stockdata_db`) on `192.168.86.55\MSSQLSERVER01` (SQL Auth).
 
 ### Repository Map
 
@@ -16,9 +16,9 @@ This is one of **7 interconnected repositories** that form an end-to-end **AI-po
 | **Data Ingestion** | `stockanalysis` | `C:\Users\sreea\OneDrive\Documents\stockanalysis` | ETL: fetches NSE 500, NASDAQ 100, Forex prices + fundamentals via yfinance/Alpha Vantage → SQL Server |
 | **SQL Infrastructure** | `sqlserver_mcp` | `Desktop\sqlserver_mcp` | .NET 8 MCP Server (Microsoft MssqlMcp) — 7 tools (ListTables, DescribeTable, ReadData, CreateTable, DropTable, InsertData, UpdateData) via stdio transport for AI IDE ↔ SQL Server |
 | **SQL Views + Dashboard** | `streamlit-trading-dashboard` | `Desktop\streamlit-trading-dashboard` | Creates 40+ technical indicator views, signal tracking tables, AI prediction history; 15-page Streamlit dashboard |
-| **ML: NASDAQ** | `sqlserver_copilot` | `Desktop\sqlserver_copilot` | Gradient Boosting classifier → `ml_trading_predictions` (daily 6:00 AM, weekly retrain) |
-| **ML: NSE** | `sqlserver_copilot_nse` | `Desktop\sqlserver_copilot_nse` | 5-model ensemble → `ml_nse_trading_predictions` + regression (daily 9:30 AM, weekly Sun 2 AM) |
-| **ML: Forex** | `sqlserver_copilot_forex` | `Desktop\sqlserver_copilot_forex` | XGBoost/LightGBM/Stacking → `forex_ml_predictions` (daily 7:00 AM, weekly Sun 6 AM) |
+| **ML: NASDAQ** | `sqlserver_copilot` | ML Machine (`192.168.86.56`) | Gradient Boosting classifier → `ml_trading_predictions` (daily 6:00 AM, weekly retrain) |
+| **ML: NSE** | `sqlserver_copilot_nse` | ML Machine (`192.168.86.56`) | 5-model ensemble → `ml_nse_trading_predictions` + regression (daily 9:30 AM, weekly Sun 2 AM) |
+| **ML: Forex** | `sqlserver_copilot_forex` | ML Machine (`192.168.86.56`) | XGBoost/LightGBM/Stacking → `forex_ml_predictions` (daily 7:00 AM, weekly Sun 6 AM) |
 | **Agentic AI** ⭐ | `stockdata_agenticai` | `Desktop\stockdata_agenticai` | **THIS REPO** — 7 CrewAI agents, daily email briefing, interactive chat, A2A HTTP API |
 
 ### Daily Execution Timeline (All times EST, Mon-Fri)
@@ -32,6 +32,15 @@ This is one of **7 interconnected repositories** that form an end-to-end **AI-po
 06:00 PM  streamlit-dashboard       → AI price predictions → ai_prediction_history
 07:00 PM  streamlit-dashboard       → Signal tracking → signal_tracking_history
 ```
+
+### Machine Topology
+
+| Machine | IP | Role | Repos Running |
+|---------|-----|------|---------------|
+| **Machine A** (SQL Server host) | `192.168.86.55` | Database server, ETL, dashboards, agentic AI | `stockanalysis`, `streamlit-trading-dashboard`, `stockdata_agenticai`, `sqlserver_mcp` |
+| **Machine B** (ML Machine) | `192.168.86.56` | ML training & daily predictions | `sqlserver_copilot`, `sqlserver_copilot_nse`, `sqlserver_copilot_forex` |
+
+All ML repos on Machine B connect to SQL Server on Machine A via SQL Auth (`remote_user`).
 
 ---
 
@@ -199,11 +208,12 @@ When both strategies agree on direction → **ALIGNED** (highest conviction). Wh
 ## 6. DATABASE SCHEMA
 
 ### Shared SQL Server
-- **Server**: `192.168.87.27\MSSQLSERVER01` (Machine A LAN IP)
+- **Server**: `192.168.86.55\MSSQLSERVER01` (Machine A LAN IP)
 - **Database**: `stockdata_db`
 - **Auth**: SQL Auth (`SQL_USERNAME=remote_user`, `SQL_TRUSTED_CONNECTION=no`)
 - **Driver**: ODBC Driver 17 for SQL Server
 - **Note**: Machine A (SQL Server host) can also use `localhost\MSSQLSERVER01` with Windows Auth for local access
+- **ML Machine**: `192.168.86.56` — runs `sqlserver_copilot`, `sqlserver_copilot_nse`, `sqlserver_copilot_forex` (daily/weekly ML training jobs)
 
 ### Tables (29+)
 
@@ -275,7 +285,7 @@ All loaded from `.env` via `python-dotenv` in `config/settings.py`:
 |----------|---------|---------|
 | `ANTHROPIC_API_KEY` | — | Claude API key |
 | `LLM_MODEL` | `claude-sonnet-4-20250514` | Model identifier |
-| `SQL_SERVER` | `192.168.87.27\MSSQLSERVER01` | SQL Server host (Machine A LAN IP) |
+| `SQL_SERVER` | `192.168.86.55\MSSQLSERVER01` | SQL Server host (Machine A LAN IP) |
 | `SQL_DATABASE` | `stockdata_db` | Database name |
 | `SQL_DRIVER` | `{ODBC Driver 17 for SQL Server}` | ODBC driver |
 | `SQL_USERNAME` | `remote_user` | SQL Auth username |
@@ -387,7 +397,7 @@ Add to `.vscode/mcp.json` or VS Code settings:
     "type": "stdio",
     "command": "C:\\Users\\sreea\\OneDrive\\Desktop\\sqlserver_mcp\\SQL-AI-samples\\MssqlMcp\\dotnet\\MssqlMcp\\bin\\Debug\\net8.0\\MssqlMcp.exe",
     "env": {
-        "CONNECTION_STRING": "Server=192.168.87.27\\MSSQLSERVER01;Database=stockdata_db;User Id=remote_user;Password=YourStrongPassword123!;TrustServerCertificate=True"
+        "CONNECTION_STRING": "Server=192.168.86.55\\MSSQLSERVER01;Database=stockdata_db;User Id=remote_user;Password=YourStrongPassword123!;TrustServerCertificate=True"
     }
 }
 ```

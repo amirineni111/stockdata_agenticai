@@ -11,7 +11,7 @@ This is the **Agentic AI** layer of a 7-repo stock trading analytics platform. I
 - The Cross-Strategy agent is NOT exposed via A2A HTTP API
 
 ## Database Notes
-- **Server**: `192.168.87.27\MSSQLSERVER01`, **DB**: `stockdata_db`, **Auth**: SQL Auth (`remote_user`)
+- **Server**: `192.168.86.55\MSSQLSERVER01`, **DB**: `stockdata_db`, **Auth**: SQL Auth (`remote_user`)
 - Price columns in `nasdaq_100_hist_data` and `nse_500_hist_data` are **VARCHAR** — always CAST to FLOAT
 - All configuration comes from `.env` via `config/settings.py`
 
@@ -41,7 +41,7 @@ Configure in `.vscode/mcp.json` to query stockdata_db directly from your AI IDE:
     "type": "stdio",
     "command": "C:\\Users\\sreea\\OneDrive\\Desktop\\sqlserver_mcp\\SQL-AI-samples\\MssqlMcp\\dotnet\\MssqlMcp\\bin\\Debug\\net8.0\\MssqlMcp.exe",
     "env": {
-        "CONNECTION_STRING": "Server=192.168.87.27\\MSSQLSERVER01;Database=stockdata_db;User Id=remote_user;Password=YourStrongPassword123!;TrustServerCertificate=True"
+        "CONNECTION_STRING": "Server=192.168.86.55\\MSSQLSERVER01;Database=stockdata_db;User Id=remote_user;Password=YourStrongPassword123!;TrustServerCertificate=True"
     }
 }
 ```
