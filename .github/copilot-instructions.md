@@ -30,9 +30,22 @@ This is the **Agentic AI** layer of a 7-repo stock trading analytics platform. I
 - `sqlserver_copilot` — NASDAQ ML training pipeline
 - `sqlserver_copilot_nse` — NSE ML training pipeline
 - `sqlserver_copilot_forex` — Forex ML training pipeline
-- `sqlserver_mcp` — .NET 8 MCP Server for AI IDE ↔ SQL Server
+- `sqlserver_mcp` — .NET 8 MCP Server (Microsoft MssqlMcp) with 7 tools: ListTables, DescribeTable, ReadData, CreateTable, DropTable, InsertData, UpdateData. Stdio transport. Use to explore DB schemas and verify query results during development.
 - `streamlit-trading-dashboard` — Visualization, signal tracking, AI predictions
 - `stockanalysis` — Data ingestion ETL (yfinance, Alpha Vantage)
+
+## MCP Server for Development
+Configure in `.vscode/mcp.json` to query stockdata_db directly from your AI IDE:
+```json
+"MSSQL MCP": {
+    "type": "stdio",
+    "command": "C:\\Users\\sreea\\OneDrive\\Desktop\\sqlserver_mcp\\SQL-AI-samples\\MssqlMcp\\dotnet\\MssqlMcp\\bin\\Debug\\net8.0\\MssqlMcp.exe",
+    "env": {
+        "CONNECTION_STRING": "Server=localhost\\MSSQLSERVER01;Database=stockdata_db;Trusted_Connection=True;TrustServerCertificate=True"
+    }
+}
+```
+Useful for: exploring table schemas before adding queries to `sql_queries.py`, verifying data freshness, checking view definitions.
 
 ## When Modifying SQL Queries
 1. Add to the appropriate dict in `config/sql_queries.py`

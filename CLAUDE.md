@@ -14,7 +14,7 @@ This is one of **7 interconnected repositories** that form an end-to-end **AI-po
 | Layer | Repo | Location | Purpose |
 |-------|------|----------|---------|
 | **Data Ingestion** | `stockanalysis` | `C:\Users\sreea\OneDrive\Documents\stockanalysis` | ETL: fetches NSE 500, NASDAQ 100, Forex prices + fundamentals via yfinance/Alpha Vantage → SQL Server |
-| **SQL Infrastructure** | `sqlserver_mcp` | `Desktop\sqlserver_mcp` | MCP Server (.NET 8) for AI IDE ↔ SQL Server + stored procs/views for trading system |
+| **SQL Infrastructure** | `sqlserver_mcp` | `Desktop\sqlserver_mcp` | .NET 8 MCP Server (Microsoft MssqlMcp) — 7 tools (ListTables, DescribeTable, ReadData, CreateTable, DropTable, InsertData, UpdateData) via stdio transport for AI IDE ↔ SQL Server |
 | **SQL Views + Dashboard** | `streamlit-trading-dashboard` | `Desktop\streamlit-trading-dashboard` | Creates 40+ technical indicator views, signal tracking tables, AI prediction history; 15-page Streamlit dashboard |
 | **ML: NASDAQ** | `sqlserver_copilot` | `Desktop\sqlserver_copilot` | Gradient Boosting classifier → `ml_trading_predictions` (daily 6:00 AM, weekly retrain) |
 | **ML: NSE** | `sqlserver_copilot_nse` | `Desktop\sqlserver_copilot_nse` | 5-model ensemble → `ml_nse_trading_predictions` + regression (daily 9:30 AM, weekly Sun 2 AM) |
@@ -217,6 +217,7 @@ When both strategies agree on direction → **ALIGNED** (highest conviction). Wh
 | `forex_master` | 10 | symbol, currency_from/to, is_active |
 | `nasdaq_100_fundamentals` | — | ticker, fetch_date, 37 fundamental metrics |
 | `nse_500_fundamentals` | — | Same schema |
+| `market_context_daily` | — | trading_date (PK), VIX/India VIX close+change, S&P 500/NASDAQ/NIFTY 50 close+return, DXY close+return, US 10Y yield+change, 11 US sector ETF returns, 5 India sector index returns |
 
 #### ML Predictions (populated by `sqlserver_copilot*` repos)
 | Table | ~Rows | Written By | Key Columns |
@@ -360,3 +361,38 @@ def _run_single_agent(agent, task_description, expected_output) -> str:
 - P1: Ensemble weighting in cross-strategy, multi-horizon accuracy tracking
 - P2: Drift detection, sector-stratified evaluation, Hold class for classifiers
 - P3: Feature importance tracking, model versioning/registry
+
+---
+
+## 11. MCP SERVER FOR DEVELOPMENT
+
+The `sqlserver_mcp` repo provides an MCP server that AI IDEs can use to query the shared database directly during development. This is useful for exploring table schemas, verifying query results, and testing SQL before adding it to `config/sql_queries.py`.
+
+### 7 MCP Tools Available
+| Tool | Purpose | Read-Only |
+|------|---------|----------|
+| ListTables | List all tables from INFORMATION_SCHEMA | Yes |
+| DescribeTable | Get columns, types, constraints for a table | Yes |
+| ReadData | Execute SQL queries | Yes |
+| CreateTable | Create new tables | No |
+| DropTable | Drop tables | No (destructive!) |
+| InsertData | Insert rows | No |
+| UpdateData | Update rows | No |
+
+### VS Code Configuration
+Add to `.vscode/mcp.json` or VS Code settings:
+```json
+"MSSQL MCP": {
+    "type": "stdio",
+    "command": "C:\\Users\\sreea\\OneDrive\\Desktop\\sqlserver_mcp\\SQL-AI-samples\\MssqlMcp\\dotnet\\MssqlMcp\\bin\\Debug\\net8.0\\MssqlMcp.exe",
+    "env": {
+        "CONNECTION_STRING": "Server=localhost\\MSSQLSERVER01;Database=stockdata_db;Trusted_Connection=True;TrustServerCertificate=True"
+    }
+}
+```
+
+### Development Use Cases for This Repo
+- Explore table schemas before writing new SQL queries for `sql_queries.py`
+- Verify query output format before agents parse it
+- Check data freshness (latest trading_date) before debugging agent issues
+- Investigate new views/tables created by sibling repos
