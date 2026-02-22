@@ -1,10 +1,10 @@
 """
 Stock Data Agentic AI Platform - Main Entry Point
 ==================================================
-Runs the Daily Briefing Crew which orchestrates 7 specialist agents
+Runs the Daily Briefing Crew which orchestrates 8 specialist agents
 to analyze market data, ML model performance, technical signals,
-strategy opportunities, forex, and risk -- then compiles and emails
-a comprehensive daily briefing.
+strategy opportunities, forex, risk, and fair value -- then compiles
+and emails a comprehensive daily briefing.
 
 Usage:
     python main.py                  # Run the full daily briefing
@@ -114,9 +114,9 @@ def run_daily_briefing(dry_run: bool = False):
     try:
         from crews.daily_briefing_crew import run_daily_briefing_with_rate_limiting
 
-        print("\nRunning 7 agents sequentially with 45s pauses between each")
+        print("\nRunning 8 agents sequentially with 60s pauses between each")
         print("to respect Anthropic's 10k tokens/min rate limit.\n")
-        print("Estimated total time: ~7-10 minutes")
+        print("Estimated total time: ~8-12 minutes")
         print("-" * 60)
 
         result = run_daily_briefing_with_rate_limiting()
