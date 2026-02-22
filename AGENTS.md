@@ -1,7 +1,7 @@
 # AGENTS.md — Agent Architecture Reference
 
 ## Overview
-This repo runs **7 CrewAI agents** sequentially to produce a daily HTML market briefing email.
+This repo runs **8 CrewAI agents** sequentially to produce a daily HTML market briefing email.
 All agents are **read-only** — they query SQL Server via predefined SQL and return LLM-analyzed text.
 
 ## Architecture
@@ -21,6 +21,8 @@ main.py → DailyBriefingCrew.run()
   ├─ Agent 6: Risk               (5 queries, 200 words)
   ├─ 60s pause
   ├─ Agent 7: Cross-Strategy     (4 queries, 350 words)
+  ├─ 60s pause
+  ├─ Agent 8: Fair Value          (4 queries, 350 words)
   └─ Jinja2 HTML compilation → SendEmailTool
 ```
 
@@ -82,6 +84,15 @@ main.py → DailyBriefingCrew.run()
 - **Queries**: `common_stocks_both_strategies` + `common_stocks_summary` (NSE), `common_stocks_nasdaq` + `common_stocks_nasdaq_summary` (NASDAQ)
 - **Output**: Aligned/conflicting stock analysis for both NSE 500 and NASDAQ 100
 
+### Agent 8 — Fair Value / Valuation Agent
+- **File**: `agents/valuation_agent.py`
+- **Role**: Fundamental Valuation Analyst
+- **Temperature**: 0.2
+- **Tools**: PredefinedSQLQueryTool (VALUATION_QUERIES)
+- **Queries**: `nasdaq_top20_undervalued`, `nse_top20_undervalued`, `valuation_summary_by_market`, `sector_valuation_heatmap`
+- **Output**: Top 20 undervalued stocks per market with composite fair value, margin of safety %, and valuation verdict
+- **View Dependency**: `vw_fair_value_estimates` (4 models: Graham Number, PEG, Forward Earnings, EPV)
+
 ## Tool Registry
 
 | Tool | Class | File | Purpose |
@@ -106,7 +117,7 @@ main.py → DailyBriefingCrew.run()
 | Forex | 5005 | `POST /` |
 | Risk | 5006 | `POST /` |
 
-Cross-Strategy Agent is **not** exposed via A2A.
+Cross-Strategy and Valuation agents are **not** exposed via A2A.
 
 ## Limitations
 - Agents have **no memory** — each run is stateless

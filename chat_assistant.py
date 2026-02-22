@@ -37,6 +37,7 @@ from config.sql_queries import (
     STRATEGY_TRADE_QUERIES,
     FOREX_QUERIES,
     RISK_QUERIES,
+    VALUATION_QUERIES,
 )
 from tools.sql_tool import SQLQueryTool, PredefinedSQLQueryTool
 from tools.calculation_tools import (
@@ -53,6 +54,7 @@ ALL_QUERIES.update({f"tech_{k}": v for k, v in TECH_SIGNAL_QUERIES.items()})
 ALL_QUERIES.update({f"strategy_{k}": v for k, v in STRATEGY_TRADE_QUERIES.items()})
 ALL_QUERIES.update({f"forex_{k}": v for k, v in FOREX_QUERIES.items()})
 ALL_QUERIES.update({f"risk_{k}": v for k, v in RISK_QUERIES.items()})
+ALL_QUERIES.update({f"valuation_{k}": v for k, v in VALUATION_QUERIES.items()})
 
 
 def create_chat_agent() -> Agent:

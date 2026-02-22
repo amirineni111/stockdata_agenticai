@@ -1,14 +1,14 @@
 # Copilot Instructions — stockdata_agenticai
 
 ## Project Context
-This is the **Agentic AI** layer of a 7-repo stock trading analytics platform. It runs 7 CrewAI agents that query a shared SQL Server database and compile a daily HTML email briefing using Claude LLM.
+This is the **Agentic AI** layer of a 7-repo stock trading analytics platform. It runs 8 CrewAI agents that query a shared SQL Server database and compile a daily HTML email briefing using Claude LLM.
 
 ## Key Architecture Rules
 - This repo is **read-only** against the database — agents only SELECT, never INSERT/UPDATE/DELETE
 - All SQL queries are predefined in `config/sql_queries.py` — agents do NOT write ad-hoc SQL in production mode
 - Each agent runs as a **mini-crew** (1 agent, 1 task) sequentially with 60s rate-limit pauses
 - `report_compiler_agent.py` is **unused** — email compilation is done via Jinja2 in `daily_briefing_crew.py`
-- The Cross-Strategy agent is NOT exposed via A2A HTTP API
+- The Cross-Strategy and Valuation agents are NOT exposed via A2A HTTP API
 
 ## Database Notes
 - **Server**: `192.168.86.55\MSSQLSERVER01`, **DB**: `stockdata_db`, **Auth**: SQL Auth (`remote_user`)
@@ -22,7 +22,7 @@ This is the **Agentic AI** layer of a 7-repo stock trading analytics platform. I
 
 ## Coding Patterns
 - Agent factories: `create_*_agent() -> crewai.Agent` in `agents/*.py`
-- Query dicts: `MARKET_INTEL_QUERIES`, `ML_ANALYST_QUERIES`, etc. in `config/sql_queries.py`
+- Query dicts: `MARKET_INTEL_QUERIES`, `ML_ANALYST_QUERIES`, `VALUATION_QUERIES`, etc. in `config/sql_queries.py`
 - LLM: `LLM(model=f"anthropic/{LLM_MODEL}", max_tokens=1500, temperature=0.2-0.3)`
 - Tools inherit from `crewai.tools.BaseTool` with Pydantic `args_schema`
 

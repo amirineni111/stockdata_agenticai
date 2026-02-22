@@ -24,6 +24,7 @@ from agents.strategy_trade_agent import create_strategy_trade_agent
 from agents.forex_agent import create_forex_agent
 from agents.risk_agent import create_risk_agent
 from agents.cross_strategy_agent import create_cross_strategy_agent
+from agents.valuation_agent import create_valuation_agent
 
 from config.settings import (
     SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD,
@@ -92,6 +93,7 @@ def _compile_and_send_email(agent_results: dict, today: str) -> str:
         forex_outlook=_markdown_to_html(agent_results.get("forex", "No data available.")),
         risk_warnings=_markdown_to_html(agent_results.get("risk", "No data available.")),
         cross_strategy=_markdown_to_html(agent_results.get("cross_strategy", "No data available.")),
+        fair_value=_markdown_to_html(agent_results.get("valuation", "No data available.")),
     )
 
     # Send the email
@@ -134,7 +136,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
     # Agent 1: Market Intelligence
     # =========================================================================
     print("\n" + "=" * 60)
-    print("AGENT 1/7: Market Intelligence Agent")
+    print("AGENT 1/8: Market Intelligence Agent")
     print("=" * 60)
 
     market_intel_agent = create_market_intel_agent()
@@ -157,7 +159,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
     # Agent 2: ML Model Analyst
     # =========================================================================
     print("\n" + "=" * 60)
-    print("AGENT 2/7: ML Model Analyst Agent")
+    print("AGENT 2/8: ML Model Analyst Agent")
     print("=" * 60)
 
     ml_analyst_agent = create_ml_analyst_agent()
@@ -184,7 +186,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
     # Agent 3: Technical Signal Agent
     # =========================================================================
     print("\n" + "=" * 60)
-    print("AGENT 3/7: Technical Signal Agent")
+    print("AGENT 3/8: Technical Signal Agent")
     print("=" * 60)
 
     tech_signal_agent = create_tech_signal_agent()
@@ -208,7 +210,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
     # Agent 4: Strategy & Trade Agent
     # =========================================================================
     print("\n" + "=" * 60)
-    print("AGENT 4/7: Strategy & Trade Agent")
+    print("AGENT 4/8: Strategy & Trade Agent")
     print("=" * 60)
 
     strategy_trade_agent = create_strategy_trade_agent()
@@ -235,7 +237,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
     # Agent 5: Forex Agent
     # =========================================================================
     print("\n" + "=" * 60)
-    print("AGENT 5/7: Forex Analysis Agent")
+    print("AGENT 5/8: Forex Analysis Agent")
     print("=" * 60)
 
     forex_agent = create_forex_agent()
@@ -262,7 +264,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
     # Agent 6: Risk Assessment Agent
     # =========================================================================
     print("\n" + "=" * 60)
-    print("AGENT 6/7: Risk Assessment Agent")
+    print("AGENT 6/8: Risk Assessment Agent")
     print("=" * 60)
 
     risk_agent = create_risk_agent()
@@ -287,7 +289,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
     # Agent 7: Cross-Strategy Analysis
     # =========================================================================
     print("\n" + "=" * 60)
-    print("AGENT 7/7: Cross-Strategy Analysis Agent")
+    print("AGENT 7/8: Cross-Strategy Analysis Agent")
     print("=" * 60)
 
     cross_strategy_agent = create_cross_strategy_agent()
@@ -315,6 +317,43 @@ def run_daily_briefing_with_rate_limiting() -> str:
             "Concise cross-strategy summary under 350 words covering BOTH NSE and "
             "NASDAQ markets, listing common stocks between both strategies with "
             "alignment status."
+        ),
+    )
+
+    print(f"\n--- Cross-Strategy complete. Pausing {PAUSE_SECONDS}s for rate limit ---")
+    time.sleep(PAUSE_SECONDS)
+
+    # =========================================================================
+    # Agent 8: Fair Value / Valuation
+    # =========================================================================
+    print("\n" + "=" * 60)
+    print("AGENT 8/8: Fair Value / Valuation Agent")
+    print("=" * 60)
+
+    valuation_agent = create_valuation_agent()
+    agent_results["valuation"] = _run_single_agent(
+        agent=valuation_agent,
+        task_description=(
+            f"Today is {today}. Run ALL of these queries:\n"
+            "1. nasdaq_top20_undervalued - Top 20 undervalued NASDAQ stocks by margin of safety\n"
+            "2. nse_top20_undervalued - Top 20 undervalued NSE stocks by margin of safety\n"
+            "3. valuation_summary_by_market - Valuation verdict breakdown per market\n\n"
+            "Provide a CONCISE summary (under 350 words) with TWO sections:\n\n"
+            "**NASDAQ 100 Top Undervalued Stocks:**\n"
+            "- Summary: X stocks undervalued, Y fairly valued, Z overvalued\n"
+            "- Top 10 stocks with ticker, company, implied price, composite fair value, "
+            "margin of safety %, valuation verdict, sector\n\n"
+            "**NSE 500 Top Undervalued Stocks:**\n"
+            "- Summary: X stocks undervalued, Y fairly valued, Z overvalued\n"
+            "- Top 10 stocks with ticker, company, implied price, composite fair value, "
+            "margin of safety %, valuation verdict, sector\n\n"
+            "Models used: Graham Number, PEG Fair Value, Forward Earnings Value, EPV. "
+            "Highlight stocks with margin of safety > 30% as deep value opportunities."
+        ),
+        expected_output=(
+            "Concise fair value summary under 350 words covering BOTH NASDAQ and NSE "
+            "markets, listing top undervalued stocks with fair value estimates and "
+            "margin of safety percentages."
         ),
     )
 

@@ -27,7 +27,7 @@ This is one of **7 interconnected repositories** that form an end-to-end **AI-po
 06:00 AM  sqlserver_copilot         → NASDAQ ML predictions → ml_trading_predictions
 06:30 AM  sqlserver_copilot         → Data freshness check + conditional retrain
 07:00 AM  sqlserver_copilot_forex   → Forex ML predictions → forex_ml_predictions
-08:00 AM  stockdata_agenticai       → 7-agent briefing crew → HTML email
+08:00 AM  stockdata_agenticai       → 8-agent briefing crew → HTML email
 09:30 AM  sqlserver_copilot_nse     → NSE ML predictions → ml_nse_trading_predictions
 06:00 PM  streamlit-dashboard       → AI price predictions → ai_prediction_history
 07:00 PM  streamlit-dashboard       → Signal tracking → signal_tracking_history
@@ -74,6 +74,7 @@ stockdata_agenticai/
 │   ├── forex_agent.py              # Agent 5: Forex rates + ML signals
 │   ├── risk_agent.py               # Agent 6: Conflicting signals, portfolio risk
 │   ├── cross_strategy_agent.py     # Agent 7: Dual-strategy alignment (NSE + NASDAQ)
+│   ├── valuation_agent.py          # Agent 8: Fair value estimates (Graham, PEG, FWD, EPV)
 │   └── report_compiler_agent.py    # UNUSED — replaced by Jinja2 compilation
 ├── crews/
 │   └── daily_briefing_crew.py      # Master orchestrator (sequential, 60s pauses)
@@ -82,7 +83,7 @@ stockdata_agenticai/
 │   ├── email_tool.py               # SendEmailTool (Office 365 SMTP)
 │   └── calculation_tools.py        # AccuracyCalc, PnLCalc, RiskRewardCalc
 ├── templates/
-│   └── briefing_email.html         # Jinja2 HTML email template (7 sections)
+│   └── briefing_email.html         # Jinja2 HTML email template (8 sections)
 ├── a2a_servers/
 │   ├── a2a_agent_server.py         # Flask HTTP server (1 per agent)
 │   ├── agent_cards.py              # A2A discovery metadata (6 agents)
@@ -110,10 +111,11 @@ All agents follow the **factory pattern**: `create_*_agent() -> crewai.Agent`
 | 5 | Forex | Forex Specialist | 0.3 | PredefinedSQLQueryTool | `FOREX_QUERIES` (4) | `forex_hist_data`, `forex_ml_predictions` |
 | 6 | Risk | FRM (Risk Manager) | 0.2 | PredefinedSQLQueryTool, PnLCalc | `RISK_QUERIES` (5) | `vw_strategy2_trade_opportunities`, `vw_PowerBI_AI_Technical_Combos`, `portfolio_tracker`, `trading_alerts`, `family_assets` |
 | 7 | Cross-Strategy | Quantitative Strategist | 0.2 | PredefinedSQLQueryTool | `CROSS_STRATEGY_QUERIES` (4) | `vw_PowerBI_AI_Technical_Combos`, `vw_strategy2_trade_opportunities`, `ml_trading_predictions` |
+| 8 | Fair Value | Fundamental Valuation Analyst | 0.2 | PredefinedSQLQueryTool | `VALUATION_QUERIES` (4) | `vw_fair_value_estimates`, `nasdaq_100_fundamentals`, `nse_500_fundamentals` |
 | — | Report Compiler | (UNUSED) | 0.4 | SendEmailTool | — | — |
 
 ### Execution Pattern
-Each agent runs as an independent mini-crew (`_run_single_agent()`) with 60-second pauses between them to respect the Anthropic 10K tokens/minute rate limit. Total runtime: ~7-10 minutes.
+Each agent runs as an independent mini-crew (`_run_single_agent()`) with 60-second pauses between them to respect the Anthropic 10K tokens/minute rate limit. Total runtime: ~8-12 minutes.
 
 ---
 
@@ -136,7 +138,7 @@ When both strategies agree on direction → **ALIGNED** (highest conviction). Wh
 
 ---
 
-## 5. SQL QUERY CATALOG (37 queries)
+## 5. SQL QUERY CATALOG (41 queries)
 
 ### MARKET_INTEL_QUERIES (4)
 | Query | Description |
@@ -203,6 +205,14 @@ When both strategies agree on direction → **ALIGNED** (highest conviction). Wh
 | `common_stocks_nasdaq` | NASDAQ stocks in both strategies (joins AI+Tech with ml_trading_predictions) |
 | `common_stocks_nasdaq_summary` | NASDAQ aligned vs conflicting counts |
 
+### VALUATION_QUERIES (4)
+| Query | Description |
+|-------|-----------|
+| `nasdaq_top20_undervalued` | Top 20 NASDAQ stocks by margin of safety (composite fair value vs implied price) |
+| `nse_top20_undervalued` | Top 20 NSE stocks by margin of safety |
+| `valuation_summary_by_market` | Valuation verdict distribution (undervalued/fair/overvalued) per market |
+| `sector_valuation_heatmap` | Sector-level valuation breakdown with avg margin of safety |
+
 ---
 
 ## 6. DATABASE SCHEMA
@@ -262,11 +272,12 @@ When both strategies agree on direction → **ALIGNED** (highest conviction). Wh
 | `portfolio_tracker` | Open/closed positions with buy/sell prices |
 | `family_assets` | Family asset inventory |
 
-### Views (2 critical ones used by this repo)
+### Views (3 critical ones used by this repo)
 | View | Source | Purpose |
-|------|--------|---------|
+|------|--------|--------|
 | `vw_PowerBI_AI_Technical_Combos` | Joins `ai_prediction_history` + `signal_tracking_history` | TIER 1/2 trade signals with AI prediction % + 6 technical indicators |
 | `vw_strategy2_trade_opportunities` | Joins ML classifier + tech alignment | Trade grades A-D with opportunity_score, recommended_action |
+| `vw_fair_value_estimates` | Joins `nasdaq_100_fundamentals` / `nse_500_fundamentals` + master tables | 4-model fair value (Graham, PEG, Forward Earnings, EPV) with composite value + margin of safety |
 
 ### Additional Views (created by `streamlit-dashboard` and `stockanalysis`)
 - **Per-market indicator views** (NSE/NASDAQ/Forex): `{market}_RSI_calculation`, `{market}_macd`, `{market}_bollingerband`, `{market}_ema_sma_view`, `{market}_atr`, `{market}_stochastic`, `{market}_fibonacci`, `{market}_support_resistance`, `{market}_patterns`

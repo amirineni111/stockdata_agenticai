@@ -954,3 +954,109 @@ CROSS_STRATEGY_QUERIES = {
         GROUP BY cross_agreement
     """,
 }
+# =============================================================================
+# Agent 8: Fair Value / Valuation Agent Queries
+# (Uses vw_fair_value_estimates view for Graham Number, PEG, Forward Earnings, EPV)
+# =============================================================================
+
+VALUATION_QUERIES = {
+    "nasdaq_top20_undervalued": """
+        SELECT TOP 20
+            ticker,
+            company_name,
+            market,
+            sector,
+            industry,
+            implied_current_price,
+            graham_number,
+            peg_fair_value,
+            forward_earnings_value,
+            earnings_power_value,
+            composite_fair_value,
+            margin_of_safety_pct,
+            valuation_verdict,
+            trailing_pe,
+            forward_pe,
+            price_to_book,
+            earnings_growth,
+            return_on_equity,
+            beta
+        FROM vw_fair_value_estimates
+        WHERE market = 'NASDAQ'
+          AND composite_fair_value IS NOT NULL
+          AND implied_current_price IS NOT NULL
+          AND valuation_verdict IN ('SIGNIFICANTLY UNDERVALUED', 'UNDERVALUED', 'FAIRLY VALUED')
+        ORDER BY margin_of_safety_pct DESC
+    """,
+
+    "nse_top20_undervalued": """
+        SELECT TOP 20
+            ticker,
+            company_name,
+            market,
+            sector,
+            industry,
+            implied_current_price,
+            graham_number,
+            peg_fair_value,
+            forward_earnings_value,
+            earnings_power_value,
+            composite_fair_value,
+            margin_of_safety_pct,
+            valuation_verdict,
+            trailing_pe,
+            forward_pe,
+            price_to_book,
+            earnings_growth,
+            return_on_equity,
+            beta
+        FROM vw_fair_value_estimates
+        WHERE market = 'NSE'
+          AND composite_fair_value IS NOT NULL
+          AND implied_current_price IS NOT NULL
+          AND valuation_verdict IN ('SIGNIFICANTLY UNDERVALUED', 'UNDERVALUED', 'FAIRLY VALUED')
+        ORDER BY margin_of_safety_pct DESC
+    """,
+
+    "valuation_summary_by_market": """
+        SELECT
+            market,
+            valuation_verdict,
+            COUNT(*) AS stock_count,
+            ROUND(AVG(margin_of_safety_pct), 2) AS avg_margin_of_safety,
+            ROUND(AVG(trailing_pe), 2) AS avg_pe,
+            ROUND(AVG(return_on_equity), 4) AS avg_roe
+        FROM vw_fair_value_estimates
+        WHERE composite_fair_value IS NOT NULL
+          AND implied_current_price IS NOT NULL
+        GROUP BY market, valuation_verdict
+        ORDER BY market, 
+            CASE valuation_verdict
+                WHEN 'SIGNIFICANTLY UNDERVALUED' THEN 1
+                WHEN 'UNDERVALUED' THEN 2
+                WHEN 'FAIRLY VALUED' THEN 3
+                WHEN 'OVERVALUED' THEN 4
+                ELSE 5
+            END
+    """,
+
+    "sector_valuation_heatmap": """
+        SELECT
+            market,
+            sector,
+            COUNT(*) AS total_stocks,
+            SUM(CASE WHEN valuation_verdict IN ('SIGNIFICANTLY UNDERVALUED', 'UNDERVALUED') 
+                THEN 1 ELSE 0 END) AS undervalued_count,
+            SUM(CASE WHEN valuation_verdict = 'FAIRLY VALUED' THEN 1 ELSE 0 END) AS fair_count,
+            SUM(CASE WHEN valuation_verdict = 'OVERVALUED' THEN 1 ELSE 0 END) AS overvalued_count,
+            ROUND(AVG(margin_of_safety_pct), 2) AS avg_margin_of_safety,
+            ROUND(AVG(CASE WHEN composite_fair_value IS NOT NULL 
+                THEN composite_fair_value END), 2) AS avg_fair_value
+        FROM vw_fair_value_estimates
+        WHERE composite_fair_value IS NOT NULL
+          AND implied_current_price IS NOT NULL
+        GROUP BY market, sector
+        HAVING COUNT(*) >= 3
+        ORDER BY market, avg_margin_of_safety DESC
+    """,
+}
