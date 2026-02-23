@@ -34,13 +34,13 @@ def create_valuation_agent() -> Agent:
     agent = Agent(
         role="Fundamental Valuation Analyst",
         goal=(
-            "Identify the most undervalued stocks in NASDAQ 100 and NSE 500 "
-            "using four valuation models: Graham Number, PEG Fair Value, "
-            "Forward Earnings Value, and Earnings Power Value. Present the "
-            "top 20 undervalued stocks per market with their composite fair "
-            "value, implied current price, margin of safety, and valuation "
-            "verdict. Highlight stocks with the highest margin of safety as "
-            "the best value opportunities."
+            "Identify the most undervalued AND most overvalued stocks in "
+            "NASDAQ 100 and NSE 500 using four valuation models: Graham "
+            "Number, PEG Fair Value, Forward Earnings Value, and Earnings "
+            "Power Value. Present the top undervalued stocks per market as "
+            "value opportunities, AND the top overvalued stocks per market "
+            "as caution/avoid zones. Include composite fair value, implied "
+            "current price, margin of safety, and valuation verdict for all."
         ),
         backstory=(
             "You are a CFA-certified fundamental valuation analyst who "
@@ -53,8 +53,10 @@ def create_valuation_agent() -> Agent:
             "at 10% WACC with no growth assumption. You combine all available "
             "models into a composite fair value and compute the margin of "
             "safety vs the implied current price. A positive margin of safety "
-            "means the stock is trading BELOW fair value (undervalued). You "
-            "present findings for BOTH NSE and NASDAQ markets separately."
+            "means the stock is trading BELOW fair value (undervalued). A "
+            "negative margin means the stock is trading ABOVE fair value "
+            "(overvalued). You present BOTH undervalued and overvalued "
+            "findings for BOTH NSE and NASDAQ markets separately."
         ),
         tools=[valuation_sql_tool],
         llm=llm,

@@ -1040,6 +1040,64 @@ VALUATION_QUERIES = {
             END
     """,
 
+    "nasdaq_top20_overvalued": """
+        SELECT TOP 20
+            ticker,
+            company_name,
+            market,
+            sector,
+            industry,
+            implied_current_price,
+            graham_number,
+            peg_fair_value,
+            forward_earnings_value,
+            earnings_power_value,
+            composite_fair_value,
+            margin_of_safety_pct,
+            valuation_verdict,
+            trailing_pe,
+            forward_pe,
+            price_to_book,
+            earnings_growth,
+            return_on_equity,
+            beta
+        FROM vw_fair_value_estimates
+        WHERE market = 'NASDAQ'
+          AND composite_fair_value IS NOT NULL
+          AND implied_current_price IS NOT NULL
+          AND valuation_verdict = 'OVERVALUED'
+        ORDER BY margin_of_safety_pct ASC
+    """,
+
+    "nse_top20_overvalued": """
+        SELECT TOP 20
+            ticker,
+            company_name,
+            market,
+            sector,
+            industry,
+            implied_current_price,
+            graham_number,
+            peg_fair_value,
+            forward_earnings_value,
+            earnings_power_value,
+            composite_fair_value,
+            margin_of_safety_pct,
+            valuation_verdict,
+            trailing_pe,
+            forward_pe,
+            price_to_book,
+            earnings_growth,
+            return_on_equity,
+            beta
+        FROM vw_fair_value_estimates
+        WHERE market = 'NSE'
+          AND composite_fair_value IS NOT NULL
+          AND implied_current_price IS NOT NULL
+          AND valuation_verdict = 'OVERVALUED'
+        ORDER BY margin_of_safety_pct ASC
+    """,
+
     "sector_valuation_heatmap": """
         SELECT
             market,
