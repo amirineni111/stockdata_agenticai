@@ -16,7 +16,7 @@ main.py → DailyBriefingCrew.run()
   ├─ 60s pause
   ├─ Agent 4: Strategy & Trade   (8 queries, 250 words)
   ├─ 60s pause
-  ├─ Agent 5: Forex              (4 queries, 200 words)
+  ├─ Agent 5: Forex Tech & ML    (9 queries, 350 words)
   ├─ 60s pause
   ├─ Agent 6: Risk               (5 queries, 200 words)
   ├─ 60s pause
@@ -60,13 +60,14 @@ main.py → DailyBriefingCrew.run()
 - **Queries**: 8 queries covering TIER 1/2 opportunities, open trades, market ML signals
 - **Output**: Top 5 high-conviction trades with entry/exit/stop levels
 
-### Agent 5 — Forex Agent
+### Agent 5 — Forex Technical & ML Agent
 - **File**: `agents/forex_agent.py`
-- **Role**: Forex Specialist
+- **Role**: Forex Technical Analyst & ML Specialist
 - **Temperature**: 0.3
 - **Tools**: PredefinedSQLQueryTool (FOREX_QUERIES)
-- **Queries**: `forex_latest_rates`, `forex_ml_predictions_latest`, `forex_ml_signal_summary`, `forex_weekly_trend`
-- **Output**: Forex rates, ML signals, weekly trends
+- **Queries**: `forex_latest_rates`, `forex_ml_predictions_latest`, `forex_ml_signal_summary`, `forex_weekly_trend`, `forex_technical_signals`, `forex_crossover_signals`, `forex_support_resistance`, `forex_pattern_signals`, `forex_technical_vs_ml`
+- **Output**: Technical indicator dashboard (RSI, MACD, BB, Stochastic), support/resistance levels, crossover & pattern signals, ML confirmation, technical-vs-ML agreement status
+- **Philosophy**: Forex follows patterns/technicals more reliably than equities — technicals are PRIMARY, ML is CONFIRMATION
 
 ### Agent 6 — Risk Agent
 - **File**: `agents/risk_agent.py`

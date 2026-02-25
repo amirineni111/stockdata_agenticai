@@ -71,7 +71,7 @@ stockdata_agenticai/
 │   ├── ml_analyst_agent.py         # Agent 2: Model accuracy scorecards
 │   ├── tech_signal_agent.py        # Agent 3: Active technical signals
 │   ├── strategy_trade_agent.py     # Agent 4: TIER 1/2 trade opportunities
-│   ├── forex_agent.py              # Agent 5: Forex rates + ML signals
+│   ├── forex_agent.py              # Agent 5: Forex technical indicators + ML confirmation
 │   ├── risk_agent.py               # Agent 6: Conflicting signals, portfolio risk
 │   ├── cross_strategy_agent.py     # Agent 7: Dual-strategy alignment (NSE + NASDAQ)
 │   ├── valuation_agent.py          # Agent 8: Fair value estimates (Graham, PEG, FWD, EPV)
@@ -108,7 +108,7 @@ All agents follow the **factory pattern**: `create_*_agent() -> crewai.Agent`
 | 2 | ML Analyst | ML Performance Analyst | 0.2 | PredefinedSQLQueryTool, AccuracyCalc | `ML_ANALYST_QUERIES` (8) | `ai_prediction_history`, `ml_prediction_summary`, `ml_nse_predict_summary`, `forex_ml_predictions`, `ml_trading_predictions` |
 | 3 | Tech Signal | CMT (Technical) | 0.2 | PredefinedSQLQueryTool | `TECH_SIGNAL_QUERIES` (4) | `vw_PowerBI_AI_Technical_Combos`, `signal_tracking_history` |
 | 4 | Strategy Trade | Trading Strategy Manager | 0.3 | PredefinedSQLQueryTool, RiskRewardCalc | `STRATEGY_TRADE_QUERIES` (8) | `vw_PowerBI_AI_Technical_Combos`, `trade_log`, `ml_trading_predictions`, `ml_nse_trading_predictions` |
-| 5 | Forex | Forex Specialist | 0.3 | PredefinedSQLQueryTool | `FOREX_QUERIES` (4) | `forex_hist_data`, `forex_ml_predictions` |
+| 5 | Forex | Forex Technical Analyst & ML Specialist | 0.3 | PredefinedSQLQueryTool | `FOREX_QUERIES` (9) | `forex_hist_data`, `forex_ml_predictions`, `Forex_RSI_calculation`, `Forex_macd`, `Forex_bollingerband`, `Forex_stochastic`, `Forex_support_resistance`, `Forex_patterns`, `vw_crossover_signals_Forex` |
 | 6 | Risk | FRM (Risk Manager) | 0.2 | PredefinedSQLQueryTool, PnLCalc | `RISK_QUERIES` (5) | `vw_strategy2_trade_opportunities`, `vw_PowerBI_AI_Technical_Combos`, `portfolio_tracker`, `trading_alerts`, `family_assets` |
 | 7 | Cross-Strategy | Quantitative Strategist | 0.2 | PredefinedSQLQueryTool | `CROSS_STRATEGY_QUERIES` (4) | `vw_PowerBI_AI_Technical_Combos`, `vw_strategy2_trade_opportunities`, `ml_trading_predictions` |
 | 8 | Fair Value | Fundamental Valuation Analyst | 0.2 | PredefinedSQLQueryTool | `VALUATION_QUERIES` (4) | `vw_fair_value_estimates`, `nasdaq_100_fundamentals`, `nse_500_fundamentals` |
@@ -180,13 +180,18 @@ When both strategies agree on direction → **ALIGNED** (highest conviction). Wh
 | `strategy1_nasdaq_top_signals` | Top 10 NASDAQ ML classifier Buy/Sell signals |
 | `strategy1_nse_top_signals` | Top 10 NSE ML classifier Buy/Sell signals |
 
-### FOREX_QUERIES (4)
+### FOREX_QUERIES (9)
 | Query | Description |
 |-------|-------------|
 | `forex_latest_rates` | Current rates + daily changes + moving averages |
 | `forex_ml_predictions_latest` | ML Buy/Sell/Hold signals with confidence |
 | `forex_ml_signal_summary` | Aggregate Buy vs Sell vs Hold counts |
 | `forex_weekly_trend` | 7-day trend with week open/close/high/low |
+| `forex_technical_signals` | RSI, MACD, Bollinger Bands, Stochastic for all pairs with individual signals |
+| `forex_crossover_signals` | EMA/SMA crossover signals from last 7 days (golden/death cross) |
+| `forex_support_resistance` | Support/resistance levels with % distance from current price |
+| `forex_pattern_signals` | Chart pattern detections from last 7 days |
+| `forex_technical_vs_ml` | Technical consensus score vs ML prediction agreement per pair |
 
 ### RISK_QUERIES (5)
 | Query | Description |

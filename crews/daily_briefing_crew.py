@@ -244,17 +244,33 @@ def run_daily_briefing_with_rate_limiting() -> str:
     agent_results["forex"] = _run_single_agent(
         agent=forex_agent,
         task_description=(
-            f"Today is {today}. Run these queries and provide a CONCISE summary (under 200 words):\n"
-            "1. Run forex_latest_rates - current rates and daily changes\n"
-            "2. Run forex_ml_predictions_latest - ML classifier Buy/Sell signals for all pairs\n"
-            "3. Run forex_ml_signal_summary - summary of Buy vs Sell counts\n\n"
-            "Provide:\n"
-            "1. USD/INR current rate and daily change\n"
-            "2. Key currency pair movements\n"
-            "3. Forex ML Classifier signals: which pairs are BUY vs SELL with confidence %\n"
-            "4. Trend vs moving averages"
+            f"Today is {today}. Run these queries and provide a CONCISE summary (under 350 words):\n"
+            "1. Run forex_technical_signals - RSI, MACD, Bollinger Bands, Stochastic for ALL pairs\n"
+            "2. Run forex_technical_vs_ml - Technical consensus vs ML prediction agreement\n"
+            "3. Run forex_support_resistance - Support/resistance levels for all pairs\n"
+            "4. Run forex_crossover_signals - Recent EMA/SMA crossover signals (last 7 days)\n"
+            "5. Run forex_pattern_signals - Chart pattern detections (last 7 days)\n"
+            "6. Run forex_latest_rates - Current rates and daily changes\n"
+            "7. Run forex_ml_predictions_latest - ML Buy/Sell signals (for CONFIRMATION only)\n\n"
+            "Structure your analysis as:\n\n"
+            "**Technical Indicator Dashboard** (PRIMARY):\n"
+            "For each pair: RSI reading + signal, MACD signal, BB position, Stochastic signal, "
+            "and the TECHNICAL CONSENSUS (Strong Buy/Buy/Hold/Sell/Strong Sell based on tech_score)\n\n"
+            "**Support & Resistance Levels**:\n"
+            "Key S/R for USD/INR and other major pairs — where price sits relative to these levels\n\n"
+            "**Recent Crossovers & Patterns**:\n"
+            "Any golden/death crosses or chart patterns detected in the last 7 days\n\n"
+            "**Technical vs ML Agreement** (CONFIRMATION):\n"
+            "For each pair: technical consensus direction vs ML prediction — "
+            "ALIGNED pairs are HIGH CONVICTION, CONFLICTING pairs are CAUTION zones\n\n"
+            "Focus on USD/INR and highlight the highest-conviction pairs where "
+            "multiple technical indicators AND ML agree on direction."
         ),
-        expected_output="Concise forex summary under 200 words with ML signals.",
+        expected_output=(
+            "Concise forex technical + ML analysis under 350 words. Lead with technical "
+            "indicator signals (RSI, MACD, BB, Stochastic), show support/resistance levels, "
+            "crossovers, patterns, then ML confirmation. Flag ALIGNED pairs as actionable."
+        ),
     )
 
     print(f"\n--- Forex complete. Pausing {PAUSE_SECONDS}s for rate limit ---")
