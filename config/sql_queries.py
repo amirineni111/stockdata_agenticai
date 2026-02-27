@@ -516,7 +516,7 @@ STRATEGY_TRADE_QUERIES = {
         INNER JOIN (
             SELECT MAX(trading_date) AS max_date FROM ml_nse_trading_predictions
         ) latest ON t.trading_date = latest.max_date
-        WHERE t.signal_strength IN ('Strong', 'Moderate')
+        WHERE t.signal_strength IN ('High', 'Medium')
             AND t.high_confidence = 1
             AND t.confidence_percentage >= 60
         ORDER BY t.confidence_percentage DESC
