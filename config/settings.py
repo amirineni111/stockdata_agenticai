@@ -59,6 +59,41 @@ EMAIL_FROM_NAME = os.getenv("EMAIL_FROM_NAME", "")
 EMAIL_FROM = os.getenv("EMAIL_FROM", "")
 EMAIL_TO = os.getenv("EMAIL_TO", "")
 
+def get_email_recipients(briefing_type: str = "daily_briefing") -> list[str]:
+    """Fetch active email recipients from the database.
+    
+    Falls back to EMAIL_TO from .env if the database table doesn't exist
+    or the query fails.
+    
+    Args:
+        briefing_type: Filter recipients by briefing type (default: 'daily_briefing').
+    
+    Returns:
+        List of email addresses.
+    """
+    try:
+        import pyodbc
+        conn = pyodbc.connect(get_sql_connection_string())
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT email_address FROM email_recipients "
+            "WHERE is_active = 1 AND briefing_type = ? "
+            "ORDER BY recipient_type, id",
+            briefing_type,
+        )
+        recipients = [row.email_address.strip() for row in cursor.fetchall()]
+        conn.close()
+        if recipients:
+            return recipients
+    except Exception:
+        pass  # Fall through to .env fallback
+
+    # Fallback to .env EMAIL_TO
+    if EMAIL_TO:
+        return [addr.strip() for addr in EMAIL_TO.split(",") if addr.strip()]
+    return []
+
+
 # =============================================================================
 # Agent Configuration
 # =============================================================================

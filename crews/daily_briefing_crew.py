@@ -99,10 +99,16 @@ def _compile_and_send_email(agent_results: dict, today: str) -> str:
     # Send the email
     subject = f"Daily Trading Briefing - {today}"
     try:
+        # Get recipients from database (falls back to .env EMAIL_TO)
+        recipients = get_email_recipients("daily_briefing")
+        if not recipients:
+            return "Error: No email recipients configured in database or .env"
+        recipients_str = ", ".join(recipients)
+
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = f"{EMAIL_FROM_NAME} <{EMAIL_FROM}>" if EMAIL_FROM_NAME else EMAIL_FROM
-        msg["To"] = EMAIL_TO
+        msg["To"] = recipients_str
 
         html_part = MIMEText(html_content, "html")
         msg.attach(html_part)
@@ -112,9 +118,9 @@ def _compile_and_send_email(agent_results: dict, today: str) -> str:
             server.starttls()
             server.ehlo()
             server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.sendmail(EMAIL_FROM, EMAIL_TO.split(","), msg.as_string())
+            server.sendmail(EMAIL_FROM, recipients, msg.as_string())
 
-        return f"Email sent successfully to {EMAIL_TO} with subject: {subject}"
+        return f"Email sent successfully to {recipients_str} with subject: {subject}"
 
     except Exception as e:
         return f"Error sending email: {str(e)}"

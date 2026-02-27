@@ -18,6 +18,7 @@ from config.settings import (
     EMAIL_FROM,
     EMAIL_FROM_NAME,
     EMAIL_TO,
+    get_email_recipients,
 )
 
 
@@ -43,10 +44,16 @@ class SendEmailTool(BaseTool):
     def _run(self, subject: str, html_body: str) -> str:
         """Send the email and return status."""
         try:
+            # Get recipients from database (falls back to .env EMAIL_TO)
+            recipients = get_email_recipients("daily_briefing")
+            if not recipients:
+                return "Error: No email recipients configured in database or .env"
+            recipients_str = ", ".join(recipients)
+
             msg = MIMEMultipart("alternative")
             msg["Subject"] = subject
             msg["From"] = f"{EMAIL_FROM_NAME} <{EMAIL_FROM}>" if EMAIL_FROM_NAME else EMAIL_FROM
-            msg["To"] = EMAIL_TO
+            msg["To"] = recipients_str
 
             # Attach the HTML body
             html_part = MIMEText(html_body, "html")
@@ -58,9 +65,9 @@ class SendEmailTool(BaseTool):
                 server.starttls()
                 server.ehlo()
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                server.sendmail(EMAIL_FROM, EMAIL_TO.split(","), msg.as_string())
+                server.sendmail(EMAIL_FROM, recipients, msg.as_string())
 
-            return f"Email sent successfully to {EMAIL_TO} with subject: {subject}"
+            return f"Email sent successfully to {recipients_str} with subject: {subject}"
 
         except smtplib.SMTPAuthenticationError:
             return (
