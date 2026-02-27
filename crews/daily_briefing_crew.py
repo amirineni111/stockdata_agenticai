@@ -220,12 +220,13 @@ def run_daily_briefing_with_rate_limiting() -> str:
             f"Today is {today}. Run these queries and provide a CONCISE summary (under 300 words):\n"
             "1. Run top_tier1_opportunities - Strategy 2 TIER 1 trade setups\n"
             "2. Run tier_summary_today - Strategy 2 overview by market\n"
-            "3. Run strategy1_nasdaq_top_signals - Strategy 1 ML classifier top NASDAQ signals\n\n"
+            "3. Run strategy1_nasdaq_top_signals - Strategy 1 ML classifier top NASDAQ signals\n"
+            "4. Run strategy1_nse_top_signals - Strategy 1 ML classifier top NSE signals\n\n"
             "Format as TWO sections:\n"
             "**Strategy 2 (AI + Technical Combos)**: Top 5 TIER 1 with ticker, market, direction, "
             "trade_tier (win rate), AI prediction %, technical combo\n"
-            "**Strategy 1 (ML Classifier)**: Top 5 NASDAQ Buy/Sell signals with ticker, signal, "
-            "confidence %, RSI category, signal strength"
+            "**Strategy 1 (ML Classifier)**: Top 5 NASDAQ Buy/Sell signals AND Top 5 NSE Buy/Sell "
+            "signals with ticker, signal, confidence %, RSI category, signal strength"
         ),
         expected_output="Concise dual-strategy trade opportunities under 300 words.",
     )
