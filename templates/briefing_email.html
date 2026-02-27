@@ -120,6 +120,110 @@
         </td>
     </tr>
 
+    <!-- Quick Decision Matrix (Static Reference) -->
+    <tr>
+        <td style="padding:15px 30px;">
+            <h2 style="color:#2c3e50; font-size:18px; margin:0 0 15px 0; padding-bottom:8px; border-bottom:2px solid #f39c12;">
+                🧭 Quick Decision Matrix
+            </h2>
+            <p style="color:#7f8c8d; font-size:12px; margin:0 0 12px 0;">
+                Use this reference to interpret signal combinations and determine trade conviction level.
+            </p>
+
+            <!-- Strategy 1 Tiers -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:14px;">
+                <tr>
+                    <td style="background-color:#2c3e50; color:#fff; font-size:13px; font-weight:bold; padding:8px 12px; border-radius:4px 4px 0 0;" colspan="3">
+                        Strategy 1 — AI + Technical Combos
+                    </td>
+                </tr>
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:6px 12px; font-size:12px; font-weight:bold; border:1px solid #dee2e6; width:25%;">Signal</td>
+                    <td style="padding:6px 12px; font-size:12px; font-weight:bold; border:1px solid #dee2e6; width:25%;">Win Rate</td>
+                    <td style="padding:6px 12px; font-size:12px; font-weight:bold; border:1px solid #dee2e6; width:50%;">Action</td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">TIER 1 ULTRA</span></td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">76–93%</td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">Highest conviction — act with full position size</td>
+                </tr>
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;"><span style="color:#f39c12; font-weight:bold;">TIER 2 MODERATE</span></td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">&lt; 76%</td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">Moderate conviction — smaller position, tighter stops</td>
+                </tr>
+            </table>
+
+            <!-- Strategy 2 Grades -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:14px;">
+                <tr>
+                    <td style="background-color:#2c3e50; color:#fff; font-size:13px; font-weight:bold; padding:8px 12px; border-radius:4px 4px 0 0;" colspan="3">
+                        Strategy 2 — ML Classifier + RSI Alignment
+                    </td>
+                </tr>
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:6px 12px; font-size:12px; font-weight:bold; border:1px solid #dee2e6; width:25%;">Grade</td>
+                    <td style="padding:6px 12px; font-size:12px; font-weight:bold; border:1px solid #dee2e6; width:25%;">ML Confidence</td>
+                    <td style="padding:6px 12px; font-size:12px; font-weight:bold; border:1px solid #dee2e6; width:50%;">Meaning</td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Grade A</span></td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">≥ 70%</td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">HIGH CONVICTION — ML + RSI fully aligned</td>
+                </tr>
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;"><span style="color:#2980b9; font-weight:bold;">Grade B</span></td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">60–70%</td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">GOOD — ML confident, RSI aligned</td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;"><span style="color:#f39c12; font-weight:bold;">Grade C</span></td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">55–60%</td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">MODERATE — marginal confidence, RSI may not align</td>
+                </tr>
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Grade D</span></td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">&lt; 55%</td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">LOW — weak signal, avoid or paper-trade only</td>
+                </tr>
+            </table>
+
+            <!-- Cross-Strategy Alignment -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:6px;">
+                <tr>
+                    <td style="background-color:#2c3e50; color:#fff; font-size:13px; font-weight:bold; padding:8px 12px; border-radius:4px 4px 0 0;" colspan="3">
+                        Cross-Strategy Alignment (Strategy 1 ∩ Strategy 2)
+                    </td>
+                </tr>
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:6px 12px; font-size:12px; font-weight:bold; border:1px solid #dee2e6; width:25%;">Scenario</td>
+                    <td style="padding:6px 12px; font-size:12px; font-weight:bold; border:1px solid #dee2e6; width:25%;">Conviction</td>
+                    <td style="padding:6px 12px; font-size:12px; font-weight:bold; border:1px solid #dee2e6; width:50%;">Recommended Action</td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">TIER 1 + Grade A<br><span style="color:#27ae60; font-weight:bold;">ALIGNED</span></td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">★★★★★</span></td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">Maximum conviction — full position, both strategies confirm direction</td>
+                </tr>
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">TIER 1 + Grade B/C<br><span style="color:#2980b9; font-weight:bold;">ALIGNED</span></td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;"><span style="color:#2980b9; font-weight:bold;">★★★★</span></td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">Strong conviction — standard position, direction agreed</td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">TIER 2 + Grade A/B<br><span style="color:#f39c12; font-weight:bold;">ALIGNED</span></td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;"><span style="color:#f39c12; font-weight:bold;">★★★</span></td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">Moderate conviction — reduced position, use stop-loss</td>
+                </tr>
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">Any Tier + Any Grade<br><span style="color:#e74c3c; font-weight:bold;">CONFLICTING</span></td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">★</span></td>
+                    <td style="padding:6px 12px; font-size:12px; border:1px solid #dee2e6;">⚠️ Strategies disagree on direction — avoid or wait for realignment</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
     <!-- Fair Value / Valuation Section -->
     <tr>
         <td style="padding:15px 30px;">
