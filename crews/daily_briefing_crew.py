@@ -29,6 +29,7 @@ from agents.valuation_agent import create_valuation_agent
 from config.settings import (
     SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD,
     EMAIL_FROM, EMAIL_FROM_NAME, EMAIL_TO,
+    get_email_recipients,
 )
 
 
