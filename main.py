@@ -11,6 +11,9 @@ Usage:
     python main.py --dry-run        # Run without sending email (print to console)
     python main.py --test-sql       # Test SQL Server connectivity only
     python main.py --test-email     # Test email sending only
+    python main.py --preflight      # Run pre-flight checks only
+    python main.py --status         # Show last 10 run results
+    python main.py --status 20      # Show last 20 run results
 """
 
 import sys
@@ -135,6 +138,19 @@ def run_daily_briefing(dry_run: bool = False):
         return False
 
 
+def run_preflight_only():
+    """Run only the pre-flight checks and report results."""
+    from tools.preflight import run_preflight_checks
+    can_proceed, results = run_preflight_checks(verbose=True)
+    return can_proceed
+
+
+def show_status(last_n: int = 10):
+    """Show the run history status report."""
+    from tools.run_tracker import print_status_report
+    print_status_report(last_n=last_n)
+
+
 def main():
     """Main entry point with CLI argument handling."""
     parser = argparse.ArgumentParser(
@@ -155,6 +171,19 @@ def main():
         action="store_true",
         help="Test email sending only",
     )
+    parser.add_argument(
+        "--preflight",
+        action="store_true",
+        help="Run pre-flight checks only (SQL, API key, data freshness, email)",
+    )
+    parser.add_argument(
+        "--status",
+        nargs="?",
+        const=10,
+        type=int,
+        metavar="N",
+        help="Show last N pipeline run results (default: 10)",
+    )
 
     args = parser.parse_args()
 
@@ -165,6 +194,14 @@ def main():
     if args.test_email:
         success = test_email()
         sys.exit(0 if success else 1)
+
+    if args.preflight:
+        success = run_preflight_only()
+        sys.exit(0 if success else 1)
+
+    if args.status is not None:
+        show_status(last_n=args.status)
+        sys.exit(0)
 
     # Run the full daily briefing
     success = run_daily_briefing(dry_run=args.dry_run)
