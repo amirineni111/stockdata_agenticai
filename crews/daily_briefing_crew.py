@@ -37,7 +37,7 @@ from agents.valuation_agent import create_valuation_agent
 from config.settings import (
     SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD,
     EMAIL_FROM, EMAIL_FROM_NAME, EMAIL_TO,
-    get_email_recipients,
+    get_email_recipients, get_email_recipients_by_type,
 )
 
 from tools.run_tracker import (
@@ -235,16 +235,21 @@ def _compile_and_send_email(agent_results: dict, today: str) -> str:
     # Send the email
     subject = f"Daily Trading Briefing - {today}"
     try:
-        # Get recipients from database (falls back to .env EMAIL_TO)
-        recipients = get_email_recipients("daily_briefing")
-        if not recipients:
+        # Get recipients grouped by type (TO/CC/BCC)
+        by_type = get_email_recipients_by_type("daily_briefing")
+        all_recipients = by_type["TO"] + by_type["CC"] + by_type["BCC"]
+        if not all_recipients:
             return "Error: No email recipients configured in database or .env"
-        recipients_str = ", ".join(recipients)
 
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = f"{EMAIL_FROM_NAME} <{EMAIL_FROM}>" if EMAIL_FROM_NAME else EMAIL_FROM
-        msg["To"] = recipients_str
+        if by_type["TO"]:
+            msg["To"] = ", ".join(by_type["TO"])
+        if by_type["CC"]:
+            msg["Cc"] = ", ".join(by_type["CC"])
+        if by_type["BCC"]:
+            msg["Bcc"] = ", ".join(by_type["BCC"])
 
         html_part = MIMEText(html_content, "html")
         msg.attach(html_part)
@@ -254,9 +259,9 @@ def _compile_and_send_email(agent_results: dict, today: str) -> str:
             server.starttls()
             server.ehlo()
             server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.sendmail(EMAIL_FROM, recipients, msg.as_string())
+            server.sendmail(EMAIL_FROM, all_recipients, msg.as_string())
 
-        return f"Email sent successfully to {recipients_str} with subject: {subject}"
+        return f"Email sent successfully to {len(all_recipients)} recipients with subject: {subject}"
 
     except Exception as e:
         return f"Error sending email: {str(e)}"

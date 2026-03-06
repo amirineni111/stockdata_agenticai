@@ -46,9 +46,9 @@ def main():
 
         # Seed with current recipients (from .env EMAIL_TO)
         recipients = [
-            ("sree.amiri@gmail.com", "Sree", "TO"),
-            ("sreenivas@multizoneus.com", "Sreenivas", "TO"),
-            ("satishgudipalli9@gmail.com", "Satish", "TO"),
+            ("sree.amiri@gmail.com", "Sree", "BCC"),
+            ("sreenivas@multizoneus.com", "Sreenivas", "BCC"),
+            ("satishgudipalli9@gmail.com", "Satish", "BCC"),
         ]
         for email, name, rtype in recipients:
             cursor.execute(
