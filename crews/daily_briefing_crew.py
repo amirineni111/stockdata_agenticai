@@ -364,7 +364,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
                 "Format as TWO sections:\n"
                 "**Strategy 2 (AI + Technical Combos)**: Top 5 TIER 1 with ticker, market, direction, "
                 "trade_tier (win rate), AI prediction %, technical combo\n"
-                "**Strategy 1 (ML Classifier)**: Top 5 NASDAQ Buy/Sell signals AND Top 5 NSE Buy/Sell "
+                "**Strategy 1 (ML Classifier)**: Top 10 NASDAQ Buy/Sell signals AND Top 10 NSE Buy/Sell "
                 "signals with ticker, signal, confidence %, RSI category, signal strength"
             ),
             "Concise dual-strategy trade opportunities under 300 words.",
@@ -427,19 +427,19 @@ def run_daily_briefing_with_rate_limiting() -> str:
                 "Provide a CONCISE summary (under 350 words) with TWO sections:\n\n"
                 "**NSE 500 Cross-Strategy:**\n"
                 "- Total stocks in both strategies, ALIGNED vs CONFLICTING count\n"
-                "- Top 5 aligned stocks with ticker, S1 direction, S1 tier, S2 grade, "
+                "- Top 10 aligned stocks with ticker, S1 direction, S1 tier, S2 grade, "
                 "S2 confidence%\n\n"
                 "**NASDAQ 100 Cross-Strategy:**\n"
                 "- Total stocks in both strategies, ALIGNED vs CONFLICTING count\n"
-                "- Top 5 aligned stocks with ticker, S1 direction, S1 tier, S2 grade, "
+                "- Top 10 aligned stocks with ticker, S1 direction, S1 tier, S2 grade, "
                 "S2 confidence%\n\n"
                 "Highlight ALIGNED stocks as highest-conviction trades. "
                 "Flag CONFLICTING stocks as caution zones."
             ),
             (
                 "Concise cross-strategy summary under 350 words with TWO sections: "
-                "(1) NSE top 5 aligned stocks with ALIGNED/CONFLICTING counts, and "
-                "(2) NASDAQ top 5 aligned stocks with ALIGNED/CONFLICTING counts. "
+                "(1) NSE top 10 aligned stocks with ALIGNED/CONFLICTING counts, and "
+                "(2) NASDAQ top 10 aligned stocks with ALIGNED/CONFLICTING counts. "
                 "All stocks must match BOTH Strategy 1 and Strategy 2 recommendations."
             ),
         ),
