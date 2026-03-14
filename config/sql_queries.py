@@ -604,82 +604,93 @@ FOREX_QUERIES = {
         SELECT
             r.symbol,
             r.trading_date,
-            r.close_price,
-            r.rsi_14 AS rsi,
+            b.close_price,
+            r.RSI AS rsi,
             CASE
-                WHEN r.rsi_14 > 70 THEN 'OVERBOUGHT'
-                WHEN r.rsi_14 < 30 THEN 'OVERSOLD'
-                WHEN r.rsi_14 > 60 THEN 'BULLISH'
-                WHEN r.rsi_14 < 40 THEN 'BEARISH'
+                WHEN r.RSI > 70 THEN 'OVERBOUGHT'
+                WHEN r.RSI < 30 THEN 'OVERSOLD'
+                WHEN r.RSI > 60 THEN 'BULLISH'
+                WHEN r.RSI < 40 THEN 'BEARISH'
                 ELSE 'NEUTRAL'
             END AS rsi_signal,
-            m.macd_line,
-            m.signal_line,
-            m.macd_histogram,
+            m.MACD AS macd_line,
+            m.Signal_Line AS signal_line,
+            (m.MACD - m.Signal_Line) AS macd_histogram,
             CASE
-                WHEN m.macd_line > m.signal_line AND m.macd_histogram > 0 THEN 'BULLISH'
-                WHEN m.macd_line < m.signal_line AND m.macd_histogram < 0 THEN 'BEARISH'
+                WHEN m.MACD > m.Signal_Line AND (m.MACD - m.Signal_Line) > 0 THEN 'BULLISH'
+                WHEN m.MACD < m.Signal_Line AND (m.MACD - m.Signal_Line) < 0 THEN 'BEARISH'
                 ELSE 'NEUTRAL'
             END AS macd_signal,
-            b.upper_band AS bb_upper,
-            b.lower_band AS bb_lower,
-            b.middle_band AS bb_middle,
+            b.Upper_Band AS bb_upper,
+            b.Lower_Band AS bb_lower,
+            b.SMA_20 AS bb_middle,
             CASE
-                WHEN r.close_price > b.upper_band THEN 'OVERBOUGHT'
-                WHEN r.close_price < b.lower_band THEN 'OVERSOLD'
+                WHEN b.close_price > b.Upper_Band THEN 'OVERBOUGHT'
+                WHEN b.close_price < b.Lower_Band THEN 'OVERSOLD'
                 ELSE 'IN-BAND'
             END AS bb_signal,
-            s.k_value AS stoch_k,
-            s.d_value AS stoch_d,
+            s.stoch_14d_k AS stoch_k,
+            s.stoch_14d_d AS stoch_d,
             CASE
-                WHEN s.k_value > 80 THEN 'OVERBOUGHT'
-                WHEN s.k_value < 20 THEN 'OVERSOLD'
-                WHEN s.k_value > s.d_value THEN 'BULLISH'
-                WHEN s.k_value < s.d_value THEN 'BEARISH'
+                WHEN s.stoch_14d_k > 80 THEN 'OVERBOUGHT'
+                WHEN s.stoch_14d_k < 20 THEN 'OVERSOLD'
+                WHEN s.stoch_14d_k > s.stoch_14d_d THEN 'BULLISH'
+                WHEN s.stoch_14d_k < s.stoch_14d_d THEN 'BEARISH'
                 ELSE 'NEUTRAL'
             END AS stoch_signal
         FROM Forex_RSI_calculation r
         LEFT JOIN Forex_macd m ON r.symbol = m.symbol AND r.trading_date = m.trading_date
         LEFT JOIN Forex_bollingerband b ON r.symbol = b.symbol AND r.trading_date = b.trading_date
-        LEFT JOIN Forex_stochastic s ON r.symbol = s.symbol AND s.trading_date = r.trading_date
+        LEFT JOIN Forex_stochastic s ON r.symbol = s.ticker AND s.trading_date = r.trading_date
         WHERE r.trading_date = (SELECT MAX(trading_date) FROM Forex_RSI_calculation)
         ORDER BY r.symbol
     """,
 
     "forex_crossover_signals": """
         SELECT
-            symbol,
+            ticker AS symbol,
             trading_date,
-            signal_type,
-            signal_details,
-            close_price
+            close_price,
+            bb_trade_signal,
+            macd_signal,
+            rsi_trade_signal,
+            sma_trade_signal,
+            stoch_signal,
+            fib_signal,
+            pattern_signal,
+            bullish_count,
+            bearish_count
         FROM vw_crossover_signals_Forex
         WHERE trading_date >= DATEADD(DAY, -7, (
             SELECT MAX(trading_date) FROM vw_crossover_signals_Forex
         ))
-        ORDER BY trading_date DESC, symbol
+        ORDER BY trading_date DESC, ticker
     """,
 
     "forex_support_resistance": """
         SELECT
-            symbol,
+            ticker AS symbol,
             trading_date,
             close_price,
-            support_level,
-            resistance_level,
-            ROUND(((resistance_level - close_price) / NULLIF(close_price, 0)) * 100, 3) AS pct_to_resistance,
-            ROUND(((close_price - support_level) / NULLIF(close_price, 0)) * 100, 3) AS pct_from_support
+            s1 AS support_level,
+            r1 AS resistance_level,
+            s2 AS support_level_2,
+            r2 AS resistance_level_2,
+            pivot_point,
+            ROUND(((r1 - close_price) / NULLIF(close_price, 0)) * 100, 3) AS pct_to_resistance,
+            ROUND(((close_price - s1) / NULLIF(close_price, 0)) * 100, 3) AS pct_from_support,
+            pivot_status,
+            sr_trade_signal
         FROM Forex_support_resistance
         WHERE trading_date = (SELECT MAX(trading_date) FROM Forex_support_resistance)
-        ORDER BY symbol
+        ORDER BY ticker
     """,
 
     "forex_pattern_signals": """
         SELECT
-            symbol,
+            ticker AS symbol,
             trading_date,
-            pattern_name,
-            pattern_type,
+            patterns_detected,
             pattern_signal,
             close_price
         FROM Forex_patterns
@@ -687,7 +698,7 @@ FOREX_QUERIES = {
             SELECT MAX(trading_date) FROM Forex_patterns
         ))
             AND pattern_signal IS NOT NULL
-        ORDER BY trading_date DESC, symbol
+        ORDER BY trading_date DESC, ticker
     """,
 
     "forex_technical_vs_ml": """
@@ -697,55 +708,55 @@ FOREX_QUERIES = {
             f.close_price,
             -- Technical Indicators Summary
             CASE
-                WHEN r.rsi_14 > 70 THEN 'OVERBOUGHT'
-                WHEN r.rsi_14 < 30 THEN 'OVERSOLD'
-                WHEN r.rsi_14 > 60 THEN 'BULLISH'
-                WHEN r.rsi_14 < 40 THEN 'BEARISH'
+                WHEN r.RSI > 70 THEN 'OVERBOUGHT'
+                WHEN r.RSI < 30 THEN 'OVERSOLD'
+                WHEN r.RSI > 60 THEN 'BULLISH'
+                WHEN r.RSI < 40 THEN 'BEARISH'
                 ELSE 'NEUTRAL'
             END AS rsi_signal,
-            ROUND(r.rsi_14, 1) AS rsi_value,
+            ROUND(r.RSI, 1) AS rsi_value,
             CASE
-                WHEN m.macd_line > m.signal_line THEN 'BULLISH'
-                WHEN m.macd_line < m.signal_line THEN 'BEARISH'
+                WHEN m.MACD > m.Signal_Line THEN 'BULLISH'
+                WHEN m.MACD < m.Signal_Line THEN 'BEARISH'
                 ELSE 'NEUTRAL'
             END AS macd_signal,
             CASE
-                WHEN f.close_price > bb.upper_band THEN 'OVERBOUGHT'
-                WHEN f.close_price < bb.lower_band THEN 'OVERSOLD'
+                WHEN f.close_price > bb.Upper_Band THEN 'OVERBOUGHT'
+                WHEN f.close_price < bb.Lower_Band THEN 'OVERSOLD'
                 ELSE 'IN-BAND'
             END AS bb_signal,
             CASE
-                WHEN st.k_value > 80 THEN 'OVERBOUGHT'
-                WHEN st.k_value < 20 THEN 'OVERSOLD'
-                WHEN st.k_value > st.d_value THEN 'BULLISH'
+                WHEN st.stoch_14d_k > 80 THEN 'OVERBOUGHT'
+                WHEN st.stoch_14d_k < 20 THEN 'OVERSOLD'
+                WHEN st.stoch_14d_k > st.stoch_14d_d THEN 'BULLISH'
                 ELSE 'BEARISH'
             END AS stoch_signal,
             -- Technical Consensus
-            (CASE WHEN r.rsi_14 > 50 THEN 1 ELSE -1 END
-             + CASE WHEN m.macd_line > m.signal_line THEN 1 ELSE -1 END
-             + CASE WHEN st.k_value > st.d_value THEN 1 ELSE -1 END
-             + CASE WHEN f.close_price > bb.middle_band THEN 1 ELSE -1 END
+            (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
+             + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
+             + CASE WHEN st.stoch_14d_k > st.stoch_14d_d THEN 1 ELSE -1 END
+             + CASE WHEN f.close_price > bb.SMA_20 THEN 1 ELSE -1 END
             ) AS tech_score,
             CASE
-                WHEN (CASE WHEN r.rsi_14 > 50 THEN 1 ELSE -1 END
-                      + CASE WHEN m.macd_line > m.signal_line THEN 1 ELSE -1 END
-                      + CASE WHEN st.k_value > st.d_value THEN 1 ELSE -1 END
-                      + CASE WHEN f.close_price > bb.middle_band THEN 1 ELSE -1 END) >= 3
+                WHEN (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
+                      + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
+                      + CASE WHEN st.stoch_14d_k > st.stoch_14d_d THEN 1 ELSE -1 END
+                      + CASE WHEN f.close_price > bb.SMA_20 THEN 1 ELSE -1 END) >= 3
                 THEN 'STRONG BUY'
-                WHEN (CASE WHEN r.rsi_14 > 50 THEN 1 ELSE -1 END
-                      + CASE WHEN m.macd_line > m.signal_line THEN 1 ELSE -1 END
-                      + CASE WHEN st.k_value > st.d_value THEN 1 ELSE -1 END
-                      + CASE WHEN f.close_price > bb.middle_band THEN 1 ELSE -1 END) >= 1
+                WHEN (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
+                      + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
+                      + CASE WHEN st.stoch_14d_k > st.stoch_14d_d THEN 1 ELSE -1 END
+                      + CASE WHEN f.close_price > bb.SMA_20 THEN 1 ELSE -1 END) >= 1
                 THEN 'BUY'
-                WHEN (CASE WHEN r.rsi_14 > 50 THEN 1 ELSE -1 END
-                      + CASE WHEN m.macd_line > m.signal_line THEN 1 ELSE -1 END
-                      + CASE WHEN st.k_value > st.d_value THEN 1 ELSE -1 END
-                      + CASE WHEN f.close_price > bb.middle_band THEN 1 ELSE -1 END) <= -3
+                WHEN (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
+                      + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
+                      + CASE WHEN st.stoch_14d_k > st.stoch_14d_d THEN 1 ELSE -1 END
+                      + CASE WHEN f.close_price > bb.SMA_20 THEN 1 ELSE -1 END) <= -3
                 THEN 'STRONG SELL'
-                WHEN (CASE WHEN r.rsi_14 > 50 THEN 1 ELSE -1 END
-                      + CASE WHEN m.macd_line > m.signal_line THEN 1 ELSE -1 END
-                      + CASE WHEN st.k_value > st.d_value THEN 1 ELSE -1 END
-                      + CASE WHEN f.close_price > bb.middle_band THEN 1 ELSE -1 END) <= -1
+                WHEN (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
+                      + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
+                      + CASE WHEN st.stoch_14d_k > st.stoch_14d_d THEN 1 ELSE -1 END
+                      + CASE WHEN f.close_price > bb.SMA_20 THEN 1 ELSE -1 END) <= -1
                 THEN 'SELL'
                 ELSE 'HOLD'
             END AS tech_consensus,
@@ -755,16 +766,16 @@ FOREX_QUERIES = {
             -- Agreement Check
             CASE
                 WHEN (
-                    (CASE WHEN r.rsi_14 > 50 THEN 1 ELSE -1 END
-                     + CASE WHEN m.macd_line > m.signal_line THEN 1 ELSE -1 END
-                     + CASE WHEN st.k_value > st.d_value THEN 1 ELSE -1 END
-                     + CASE WHEN f.close_price > bb.middle_band THEN 1 ELSE -1 END) >= 1
+                    (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
+                     + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
+                     + CASE WHEN st.stoch_14d_k > st.stoch_14d_d THEN 1 ELSE -1 END
+                     + CASE WHEN f.close_price > bb.SMA_20 THEN 1 ELSE -1 END) >= 1
                     AND ml.predicted_signal = 'Buy'
                 ) OR (
-                    (CASE WHEN r.rsi_14 > 50 THEN 1 ELSE -1 END
-                     + CASE WHEN m.macd_line > m.signal_line THEN 1 ELSE -1 END
-                     + CASE WHEN st.k_value > st.d_value THEN 1 ELSE -1 END
-                     + CASE WHEN f.close_price > bb.middle_band THEN 1 ELSE -1 END) <= -1
+                    (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
+                     + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
+                     + CASE WHEN st.stoch_14d_k > st.stoch_14d_d THEN 1 ELSE -1 END
+                     + CASE WHEN f.close_price > bb.SMA_20 THEN 1 ELSE -1 END) <= -1
                     AND ml.predicted_signal = 'Sell'
                 )
                 THEN 'ALIGNED'
@@ -775,7 +786,7 @@ FOREX_QUERIES = {
         LEFT JOIN Forex_RSI_calculation r ON f.symbol = r.symbol AND f.trading_date = r.trading_date
         LEFT JOIN Forex_macd m ON f.symbol = m.symbol AND f.trading_date = m.trading_date
         LEFT JOIN Forex_bollingerband bb ON f.symbol = bb.symbol AND f.trading_date = bb.trading_date
-        LEFT JOIN Forex_stochastic st ON f.symbol = st.symbol AND f.trading_date = st.trading_date
+        LEFT JOIN Forex_stochastic st ON f.symbol = st.ticker AND f.trading_date = st.trading_date
         LEFT JOIN forex_ml_predictions ml ON f.symbol = ml.currency_pair AND f.trading_date = ml.prediction_date
         WHERE f.trading_date = (SELECT MAX(trading_date) FROM forex_hist_data)
         ORDER BY tech_score DESC
