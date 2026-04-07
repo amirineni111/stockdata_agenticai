@@ -32,7 +32,6 @@ from agents.strategy_trade_agent import create_strategy_trade_agent
 from agents.forex_agent import create_forex_agent
 from agents.risk_agent import create_risk_agent
 from agents.cross_strategy_agent import create_cross_strategy_agent
-from agents.valuation_agent import create_valuation_agent
 
 from config.settings import (
     SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD,
@@ -53,7 +52,7 @@ from tools.preflight import run_preflight_checks
 # ---------------------------------------------------------------------------
 MAX_AGENT_RETRIES = 2          # Total attempts per agent (1 = no retry)
 PAUSE_SECONDS = 60             # Pause between agents for rate-limit
-RETRY_PAUSE_SECONDS = 30       # Extra pause before a retry attempt
+RETRY_PAUSE_SECONDS = 60       # Extra pause before a retry attempt (must exceed rate-limit window)
 
 # Error patterns that indicate the agent output is garbage
 _ERROR_PATTERNS = [
@@ -229,7 +228,6 @@ def _compile_and_send_email(agent_results: dict, today: str) -> str:
         forex_outlook=_markdown_to_html(agent_results.get("forex", "No data available.")),
         risk_warnings=_markdown_to_html(agent_results.get("risk", "No data available.")),
         cross_strategy=_markdown_to_html(agent_results.get("cross_strategy", "No data available.")),
-        fair_value=_markdown_to_html(agent_results.get("valuation", "No data available.")),
     )
 
     # Send the email
@@ -312,7 +310,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
     # Define all agents as a list of (key, number, label, create_fn, task_desc, expected)
     agent_pipeline = [
         (
-            "market_intel", "1/8", "Market Intelligence",
+            "market_intel", "1/7", "Market Intelligence",
             create_market_intel_agent,
             (
                 f"Today is {today}. Run the nasdaq_market_summary and nse_market_summary queries. "
@@ -324,7 +322,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
             "Concise market summary under 200 words with key stats.",
         ),
         (
-            "ml_analysis", "2/8", "ML Model Analyst",
+            "ml_analysis", "2/7", "ML Model Analyst",
             create_ml_analyst_agent,
             (
                 f"Today is {today}. Run these queries and provide a CONCISE scorecard (under 300 words):\n"
@@ -340,7 +338,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
             "Concise dual-strategy model scorecard under 300 words covering NASDAQ, NSE, and Forex.",
         ),
         (
-            "tech_signals", "3/8", "Technical Signal",
+            "tech_signals", "3/7", "Technical Signal",
             create_tech_signal_agent,
             (
                 f"Today is {today}. Run the active_signals_today query. "
@@ -353,7 +351,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
             "Concise signal summary under 200 words with trade tiers.",
         ),
         (
-            "strategy", "4/8", "Strategy & Trade",
+            "strategy", "4/7", "Strategy & Trade",
             create_strategy_trade_agent,
             (
                 f"Today is {today}. Run these queries and provide a CONCISE summary (under 300 words):\n"
@@ -370,7 +368,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
             "Concise dual-strategy trade opportunities under 300 words.",
         ),
         (
-            "forex", "5/8", "Forex Analysis",
+            "forex", "5/7", "Forex Analysis",
             create_forex_agent,
             (
                 f"Today is {today}. Run these queries and provide a CONCISE summary (under 350 words):\n"
@@ -402,7 +400,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
             ),
         ),
         (
-            "risk", "6/8", "Risk Assessment",
+            "risk", "6/7", "Risk Assessment",
             create_risk_agent,
             (
                 f"Today is {today}. Run these queries and provide a CONCISE summary (under 200 words):\n"
@@ -416,7 +414,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
             "Concise risk assessment under 200 words with conflict details.",
         ),
         (
-            "cross_strategy", "7/8", "Cross-Strategy Analysis",
+            "cross_strategy", "7/7", "Cross-Strategy Analysis",
             create_cross_strategy_agent,
             (
                 f"Today is {today}. Run ALL of these queries:\n"
@@ -441,41 +439,6 @@ def run_daily_briefing_with_rate_limiting() -> str:
                 "(1) NSE top 10 aligned stocks with ALIGNED/CONFLICTING counts, and "
                 "(2) NASDAQ top 10 aligned stocks with ALIGNED/CONFLICTING counts. "
                 "All stocks must match BOTH Strategy 1 and Strategy 2 recommendations."
-            ),
-        ),
-        (
-            "valuation", "8/8", "Fair Value / Valuation",
-            create_valuation_agent,
-            (
-                f"Today is {today}. Run ALL of these queries:\n"
-                "1. nasdaq_top20_undervalued - Top 20 undervalued NASDAQ stocks by margin of safety\n"
-                "2. nse_top20_undervalued - Top 20 undervalued NSE stocks by margin of safety\n"
-                "3. nasdaq_top20_overvalued - Top 20 overvalued NASDAQ stocks (most negative margin)\n"
-                "4. nse_top20_overvalued - Top 20 overvalued NSE stocks (most negative margin)\n"
-                "5. valuation_summary_by_market - Valuation verdict breakdown per market\n\n"
-                "Provide a CONCISE summary (under 450 words) with FOUR sections:\n\n"
-                "**NASDAQ 100 Top Undervalued Stocks:**\n"
-                "- Summary: X stocks undervalued, Y fairly valued, Z overvalued\n"
-                "- Top 10 stocks with ticker, company, implied price, composite fair value, "
-                "margin of safety %, sector\n\n"
-                "**NASDAQ 100 Most Overvalued Stocks:**\n"
-                "- Top 10 stocks with ticker, company, implied price, composite fair value, "
-                "margin of safety % (negative), sector — these are CAUTION/AVOID zones\n\n"
-                "**NSE 500 Top Undervalued Stocks:**\n"
-                "- Summary: X stocks undervalued, Y fairly valued, Z overvalued\n"
-                "- Top 10 stocks with ticker, company, implied price, composite fair value, "
-                "margin of safety %, sector\n\n"
-                "**NSE 500 Most Overvalued Stocks:**\n"
-                "- Top 10 stocks with ticker, company, implied price, composite fair value, "
-                "margin of safety % (negative), sector — these are CAUTION/AVOID zones\n\n"
-                "Models used: Graham Number, PEG Fair Value, Forward Earnings Value, EPV. "
-                "Highlight stocks with margin of safety > 30% as deep value opportunities. "
-                "Flag stocks with margin below -50% as significantly overvalued."
-            ),
-            (
-                "Concise fair value summary under 450 words covering BOTH NASDAQ and NSE "
-                "markets, listing top undervalued AND top overvalued stocks with fair value "
-                "estimates and margin of safety percentages."
             ),
         ),
     ]

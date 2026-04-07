@@ -973,6 +973,7 @@ CROSS_STRATEGY_QUERIES = {
         )
         AND s2.ml_confidence_pct >= 55
         ORDER BY s2_confidence_pct DESC
+        OFFSET 0 ROWS FETCH NEXT 15 ROWS ONLY
     """,
 
     "common_stocks_summary": """
@@ -1101,6 +1102,7 @@ CROSS_STRATEGY_QUERIES = {
                AND m.predicted_signal IN ('Buy', 'BUY', 'Oversold'))
           )
         ORDER BY m.confidence_percentage DESC
+        OFFSET 0 ROWS FETCH NEXT 15 ROWS ONLY
     """,
 
     "common_stocks_nasdaq_summary": """
