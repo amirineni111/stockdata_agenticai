@@ -24,6 +24,7 @@ MARKET_INTEL_QUERIES = {
         WHERE trading_date = (
             SELECT MAX(trading_date) FROM nasdaq_100_hist_data
         )
+            AND CAST(close_price AS FLOAT) > 15
         ORDER BY ABS(
             (CAST(close_price AS FLOAT) - CAST(open_price AS FLOAT))
             / NULLIF(CAST(open_price AS FLOAT), 0)
@@ -46,6 +47,7 @@ MARKET_INTEL_QUERIES = {
         WHERE trading_date = (
             SELECT MAX(trading_date) FROM nse_500_hist_data
         )
+            AND CAST(close_price AS FLOAT) >= 20
         ORDER BY ABS(
             (CAST(close_price AS FLOAT) - CAST(open_price AS FLOAT))
             / NULLIF(CAST(open_price AS FLOAT), 0)
@@ -170,6 +172,8 @@ ML_ANALYST_QUERIES = {
         WHERE prediction_date = (
             SELECT MAX(prediction_date) FROM ai_prediction_history
         )
+            AND ((market = 'NASDAQ 100' AND CAST(current_price AS FLOAT) > 15)
+                 OR (market = 'NSE 500' AND CAST(current_price AS FLOAT) >= 20))
         ORDER BY model_confidence DESC
     """,
 
@@ -274,6 +278,8 @@ TECH_SIGNAL_QUERIES = {
             FROM vw_PowerBI_AI_Technical_Combos
             GROUP BY market
         ) latest ON v.market = latest.market AND v.signal_date = latest.max_date
+        WHERE ((v.market = 'NASDAQ 100' AND v.signal_price > 15)
+               OR (v.market = 'NSE 500' AND v.signal_price >= 20))
         ORDER BY v.signal_strength DESC
     """,
 
@@ -333,6 +339,8 @@ TECH_SIGNAL_QUERIES = {
             GROUP BY market
         ) latest ON v.market = latest.market AND v.signal_date = latest.max_date
         WHERE v.signal_strength >= 2
+            AND ((v.market = 'NASDAQ 100' AND v.signal_price > 15)
+                 OR (v.market = 'NSE 500' AND v.signal_price >= 20))
         ORDER BY v.signal_strength DESC, v.market
     """,
 }
@@ -368,6 +376,8 @@ STRATEGY_TRADE_QUERIES = {
             GROUP BY market
         ) latest ON v.market = latest.market AND v.signal_date = latest.max_date
         WHERE v.trade_tier LIKE 'TIER 1%'
+            AND ((v.market = 'NASDAQ 100' AND v.signal_price > 15)
+                 OR (v.market = 'NSE 500' AND v.signal_price >= 20))
         ORDER BY v.signal_strength DESC, ABS(v.ai_prediction_pct) DESC
     """,
 
@@ -395,6 +405,8 @@ STRATEGY_TRADE_QUERIES = {
             GROUP BY market
         ) latest ON v.market = latest.market AND v.signal_date = latest.max_date
         WHERE v.trade_tier LIKE 'TIER 2%'
+            AND ((v.market = 'NASDAQ 100' AND v.signal_price > 15)
+                 OR (v.market = 'NSE 500' AND v.signal_price >= 20))
         ORDER BY v.signal_strength DESC, ABS(v.ai_prediction_pct) DESC
     """,
 
@@ -448,6 +460,7 @@ STRATEGY_TRADE_QUERIES = {
         FROM vw_PowerBI_AI_Technical_Combos
         WHERE trade_tier LIKE 'TIER 1%'
             AND market = 'NASDAQ 100'
+            AND signal_price > 15
             AND signal_date = (
                 SELECT MAX(signal_date) FROM vw_PowerBI_AI_Technical_Combos
                 WHERE market = 'NASDAQ 100'
@@ -468,6 +481,7 @@ STRATEGY_TRADE_QUERIES = {
         FROM vw_PowerBI_AI_Technical_Combos
         WHERE trade_tier LIKE 'TIER 1%'
             AND market = 'NSE 500'
+            AND signal_price >= 20
             AND signal_date = (
                 SELECT MAX(signal_date) FROM vw_PowerBI_AI_Technical_Combos
                 WHERE market = 'NSE 500'
@@ -494,6 +508,7 @@ STRATEGY_TRADE_QUERIES = {
         WHERE trading_date = (SELECT MAX(trading_date) FROM ml_trading_predictions)
             AND signal_strength IN ('Strong', 'Moderate')
             AND confidence_percentage >= 60
+            AND CAST(close_price AS FLOAT) > 15
         ORDER BY confidence_percentage DESC
     """,
 
@@ -519,6 +534,7 @@ STRATEGY_TRADE_QUERIES = {
         WHERE t.signal_strength IN ('High', 'Medium')
             AND t.high_confidence = 1
             AND t.confidence_percentage >= 60
+            AND CAST(t.close_price AS FLOAT) >= 20
         ORDER BY t.confidence_percentage DESC
     """,
 }
@@ -932,6 +948,7 @@ CROSS_STRATEGY_QUERIES = {
                 GROUP BY market
             ) latest ON s1.market = latest.market AND s1.signal_date = latest.max_date
             WHERE s1.trade_tier LIKE 'TIER 1%' OR s1.trade_tier LIKE 'TIER 2%'
+                AND s1.signal_price >= 20
         )
         SELECT
             s2.market,
@@ -1055,6 +1072,7 @@ CROSS_STRATEGY_QUERIES = {
             ) latest ON s1.signal_date = latest.max_date
             WHERE s1.market = 'NASDAQ 100'
               AND (s1.trade_tier LIKE 'TIER 1%' OR s1.trade_tier LIKE 'TIER 2%')
+              AND s1.signal_price > 15
         )
         SELECT
             'NASDAQ 100' AS market,
@@ -1095,6 +1113,7 @@ CROSS_STRATEGY_QUERIES = {
         INNER JOIN s1_best s1b ON m.ticker = s1b.ticker AND s1b.rn = 1
         WHERE m.signal_strength IN ('Strong', 'Moderate')
           AND m.confidence_percentage >= 55
+          AND CAST(m.close_price AS FLOAT) > 15
           AND (
               (s1b.signal_type = 'BEARISH'
                AND m.predicted_signal IN ('Sell', 'SELL', 'Overbought'))
@@ -1151,166 +1170,171 @@ CROSS_STRATEGY_QUERIES = {
     """,
 }
 # =============================================================================
-# Agent 8: Fair Value / Valuation Agent Queries
+# Agent 8: Fair Value / Valuation Agent Queries (NOT CURRENTLY IN USE)
 # (Uses vw_fair_value_estimates view for Graham Number, PEG, Forward Earnings, EPV)
 # =============================================================================
 
+# NOTE: Valuation agent is not included in the daily briefing pipeline.
+# These queries are preserved for future use but currently inactive.
+
 VALUATION_QUERIES = {
-    "nasdaq_top20_undervalued": """
-        SELECT TOP 20
-            ticker,
-            company_name,
-            market,
-            sector,
-            industry,
-            implied_current_price,
-            graham_number,
-            peg_fair_value,
-            forward_earnings_value,
-            earnings_power_value,
-            composite_fair_value,
-            margin_of_safety_pct,
-            valuation_verdict,
-            trailing_pe,
-            forward_pe,
-            price_to_book,
-            earnings_growth,
-            return_on_equity,
-            beta
-        FROM vw_fair_value_estimates
-        WHERE market = 'NASDAQ'
-          AND composite_fair_value IS NOT NULL
-          AND implied_current_price IS NOT NULL
-          AND valuation_verdict IN ('SIGNIFICANTLY UNDERVALUED', 'UNDERVALUED', 'FAIRLY VALUED')
-        ORDER BY margin_of_safety_pct DESC
-    """,
+    # "nasdaq_top20_undervalued": """
+    #     SELECT TOP 20
+    #         ticker,
+    #         company_name,
+    #         market,
+    #         sector,
+    #         industry,
+    #         implied_current_price,
+    #         graham_number,
+    #         peg_fair_value,
+    #         forward_earnings_value,
+    #         earnings_power_value,
+    #         composite_fair_value,
+    #         margin_of_safety_pct,
+    #         valuation_verdict,
+    #         trailing_pe,
+    #         forward_pe,
+    #         price_to_book,
+    #         earnings_growth,
+    #         return_on_equity,
+    #         beta
+    #     FROM vw_fair_value_estimates
+    #     WHERE market = 'NASDAQ'
+    #       AND composite_fair_value IS NOT NULL
+    #       AND implied_current_price IS NOT NULL
+    #       AND implied_current_price > 15
+    #       AND valuation_verdict IN ('SIGNIFICANTLY UNDERVALUED', 'UNDERVALUED', 'FAIRLY VALUED')
+    #     ORDER BY margin_of_safety_pct DESC
+    # """,
 
-    "nse_top20_undervalued": """
-        SELECT TOP 20
-            ticker,
-            company_name,
-            market,
-            sector,
-            industry,
-            implied_current_price,
-            graham_number,
-            peg_fair_value,
-            forward_earnings_value,
-            earnings_power_value,
-            composite_fair_value,
-            margin_of_safety_pct,
-            valuation_verdict,
-            trailing_pe,
-            forward_pe,
-            price_to_book,
-            earnings_growth,
-            return_on_equity,
-            beta
-        FROM vw_fair_value_estimates
-        WHERE market = 'NSE'
-          AND composite_fair_value IS NOT NULL
-          AND implied_current_price IS NOT NULL
-          AND valuation_verdict IN ('SIGNIFICANTLY UNDERVALUED', 'UNDERVALUED', 'FAIRLY VALUED')
-        ORDER BY margin_of_safety_pct DESC
-    """,
+    # "nse_top20_undervalued": """
+    #     SELECT TOP 20
+    #         ticker,
+    #         company_name,
+    #         market,
+    #         sector,
+    #         industry,
+    #         implied_current_price,
+    #         graham_number,
+    #         peg_fair_value,
+    #         forward_earnings_value,
+    #         earnings_power_value,
+    #         composite_fair_value,
+    #         margin_of_safety_pct,
+    #         valuation_verdict,
+    #         trailing_pe,
+    #         forward_pe,
+    #         price_to_book,
+    #         earnings_growth,
+    #         return_on_equity,
+    #         beta
+    #     FROM vw_fair_value_estimates
+    #     WHERE market = 'NSE'
+    #       AND composite_fair_value IS NOT NULL
+    #       AND implied_current_price IS NOT NULL
+    #       AND implied_current_price >= 20
+    #       AND valuation_verdict IN ('SIGNIFICANTLY UNDERVALUED', 'UNDERVALUED', 'FAIRLY VALUED')
+    #     ORDER BY margin_of_safety_pct DESC
+    # """,
 
-    "valuation_summary_by_market": """
-        SELECT
-            market,
-            valuation_verdict,
-            COUNT(*) AS stock_count,
-            ROUND(AVG(margin_of_safety_pct), 2) AS avg_margin_of_safety,
-            ROUND(AVG(trailing_pe), 2) AS avg_pe,
-            ROUND(AVG(return_on_equity), 4) AS avg_roe
-        FROM vw_fair_value_estimates
-        WHERE composite_fair_value IS NOT NULL
-          AND implied_current_price IS NOT NULL
-        GROUP BY market, valuation_verdict
-        ORDER BY market, 
-            CASE valuation_verdict
-                WHEN 'SIGNIFICANTLY UNDERVALUED' THEN 1
-                WHEN 'UNDERVALUED' THEN 2
-                WHEN 'FAIRLY VALUED' THEN 3
-                WHEN 'OVERVALUED' THEN 4
-                ELSE 5
-            END
-    """,
+    # "valuation_summary_by_market": """
+    #     SELECT
+    #         market,
+    #         valuation_verdict,
+    #         COUNT(*) AS stock_count,
+    #         ROUND(AVG(margin_of_safety_pct), 2) AS avg_margin_of_safety,
+    #         ROUND(AVG(trailing_pe), 2) AS avg_pe,
+    #         ROUND(AVG(return_on_equity), 4) AS avg_roe
+    #     FROM vw_fair_value_estimates
+    #     WHERE composite_fair_value IS NOT NULL
+    #       AND implied_current_price IS NOT NULL
+    #     GROUP BY market, valuation_verdict
+    #     ORDER BY market, 
+    #         CASE valuation_verdict
+    #             WHEN 'SIGNIFICANTLY UNDERVALUED' THEN 1
+    #             WHEN 'UNDERVALUED' THEN 2
+    #             WHEN 'FAIRLY VALUED' THEN 3
+    #             WHEN 'OVERVALUED' THEN 4
+    #             ELSE 5
+    #         END
+    # """,
 
-    "nasdaq_top20_overvalued": """
-        SELECT TOP 20
-            ticker,
-            company_name,
-            market,
-            sector,
-            industry,
-            implied_current_price,
-            graham_number,
-            peg_fair_value,
-            forward_earnings_value,
-            earnings_power_value,
-            composite_fair_value,
-            margin_of_safety_pct,
-            valuation_verdict,
-            trailing_pe,
-            forward_pe,
-            price_to_book,
-            earnings_growth,
-            return_on_equity,
-            beta
-        FROM vw_fair_value_estimates
-        WHERE market = 'NASDAQ'
-          AND composite_fair_value IS NOT NULL
-          AND implied_current_price IS NOT NULL
-          AND valuation_verdict = 'OVERVALUED'
-        ORDER BY margin_of_safety_pct ASC
-    """,
+    # "nasdaq_top20_overvalued": """
+    #     SELECT TOP 20
+    #         ticker,
+    #         company_name,
+    #         market,
+    #         sector,
+    #         industry,
+    #         implied_current_price,
+    #         graham_number,
+    #         peg_fair_value,
+    #         forward_earnings_value,
+    #         earnings_power_value,
+    #         composite_fair_value,
+    #         margin_of_safety_pct,
+    #         valuation_verdict,
+    #         trailing_pe,
+    #         forward_pe,
+    #         price_to_book,
+    #         earnings_growth,
+    #         return_on_equity,
+    #         beta
+    #     FROM vw_fair_value_estimates
+    #     WHERE market = 'NASDAQ'
+    #       AND composite_fair_value IS NOT NULL
+    #       AND implied_current_price IS NOT NULL
+    #       AND valuation_verdict = 'OVERVALUED'
+    #     ORDER BY margin_of_safety_pct ASC
+    # """,
 
-    "nse_top20_overvalued": """
-        SELECT TOP 20
-            ticker,
-            company_name,
-            market,
-            sector,
-            industry,
-            implied_current_price,
-            graham_number,
-            peg_fair_value,
-            forward_earnings_value,
-            earnings_power_value,
-            composite_fair_value,
-            margin_of_safety_pct,
-            valuation_verdict,
-            trailing_pe,
-            forward_pe,
-            price_to_book,
-            earnings_growth,
-            return_on_equity,
-            beta
-        FROM vw_fair_value_estimates
-        WHERE market = 'NSE'
-          AND composite_fair_value IS NOT NULL
-          AND implied_current_price IS NOT NULL
-          AND valuation_verdict = 'OVERVALUED'
-        ORDER BY margin_of_safety_pct ASC
-    """,
+    # "nse_top20_overvalued": """
+    #     SELECT TOP 20
+    #         ticker,
+    #         company_name,
+    #         market,
+    #         sector,
+    #         industry,
+    #         implied_current_price,
+    #         graham_number,
+    #         peg_fair_value,
+    #         forward_earnings_value,
+    #         earnings_power_value,
+    #         composite_fair_value,
+    #         margin_of_safety_pct,
+    #         valuation_verdict,
+    #         trailing_pe,
+    #         forward_pe,
+    #         price_to_book,
+    #         earnings_growth,
+    #         return_on_equity,
+    #         beta
+    #     FROM vw_fair_value_estimates
+    #     WHERE market = 'NSE'
+    #       AND composite_fair_value IS NOT NULL
+    #       AND implied_current_price IS NOT NULL
+    #       AND valuation_verdict = 'OVERVALUED'
+    #     ORDER BY margin_of_safety_pct ASC
+    # """,
 
-    "sector_valuation_heatmap": """
-        SELECT
-            market,
-            sector,
-            COUNT(*) AS total_stocks,
-            SUM(CASE WHEN valuation_verdict IN ('SIGNIFICANTLY UNDERVALUED', 'UNDERVALUED') 
-                THEN 1 ELSE 0 END) AS undervalued_count,
-            SUM(CASE WHEN valuation_verdict = 'FAIRLY VALUED' THEN 1 ELSE 0 END) AS fair_count,
-            SUM(CASE WHEN valuation_verdict = 'OVERVALUED' THEN 1 ELSE 0 END) AS overvalued_count,
-            ROUND(AVG(margin_of_safety_pct), 2) AS avg_margin_of_safety,
-            ROUND(AVG(CASE WHEN composite_fair_value IS NOT NULL 
-                THEN composite_fair_value END), 2) AS avg_fair_value
-        FROM vw_fair_value_estimates
-        WHERE composite_fair_value IS NOT NULL
-          AND implied_current_price IS NOT NULL
-        GROUP BY market, sector
-        HAVING COUNT(*) >= 3
-        ORDER BY market, avg_margin_of_safety DESC
-    """,
+    # "sector_valuation_heatmap": """
+    #     SELECT
+    #         market,
+    #         sector,
+    #         COUNT(*) AS total_stocks,
+    #         SUM(CASE WHEN valuation_verdict IN ('SIGNIFICANTLY UNDERVALUED', 'UNDERVALUED') 
+    #             THEN 1 ELSE 0 END) AS undervalued_count,
+    #         SUM(CASE WHEN valuation_verdict = 'FAIRLY VALUED' THEN 1 ELSE 0 END) AS fair_count,
+    #         SUM(CASE WHEN valuation_verdict = 'OVERVALUED' THEN 1 ELSE 0 END) AS overvalued_count,
+    #         ROUND(AVG(margin_of_safety_pct), 2) AS avg_margin_of_safety,
+    #         ROUND(AVG(CASE WHEN composite_fair_value IS NOT NULL 
+    #             THEN composite_fair_value END), 2) AS avg_fair_value
+    #     FROM vw_fair_value_estimates
+    #     WHERE composite_fair_value IS NOT NULL
+    #       AND implied_current_price IS NOT NULL
+    #     GROUP BY market, sector
+    #     HAVING COUNT(*) >= 3
+    #     ORDER BY market, avg_margin_of_safety DESC
+    # """,
 }
