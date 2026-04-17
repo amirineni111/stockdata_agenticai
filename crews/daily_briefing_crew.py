@@ -354,18 +354,17 @@ def run_daily_briefing_with_rate_limiting() -> str:
             "strategy", "4/7", "Strategy & Trade",
             create_strategy_trade_agent,
             (
-                f"Today is {today}. Run these queries and provide a CONCISE summary (under 300 words):\n"
-                "1. Run top_tier1_opportunities - Strategy 2 TIER 1 trade setups\n"
-                "2. Run tier_summary_today - Strategy 2 overview by market\n"
-                "3. Run strategy1_nasdaq_top_signals - Strategy 1 ML classifier top NASDAQ signals\n"
-                "4. Run strategy1_nse_top_signals - Strategy 1 ML classifier top NSE signals\n\n"
-                "Format as TWO sections:\n"
-                "**Strategy 2 (AI + Technical Combos)**: Top 5 TIER 1 with ticker, market, direction, "
-                "trade_tier (win rate), AI prediction %, technical combo\n"
-                "**Strategy 1 (ML Classifier)**: Top 10 NASDAQ Buy/Sell signals AND Top 10 NSE Buy/Sell "
-                "signals with ticker, signal, confidence %, RSI category, signal strength"
+                f"Today is {today}. Run these queries and provide a CONCISE summary (under 250 words):\n"
+                "1. Run top_tier1_opportunities - Top TIER 1 trade setups across both markets\n"
+                "2. Run top_tier2_opportunities - Top TIER 2 trade setups across both markets\n"
+                "3. Run tier_summary_today - Overview by market\n\n"
+                "Provide a focused summary on AI + Technical Combo signals:\n"
+                "- Top 10 TIER 1 opportunities with ticker, market, direction (BULLISH/BEARISH), "
+                "trade_tier (win rate %), AI prediction %, and technical combo\n"
+                "- If less than 10 TIER 1 signals, include top TIER 2 signals to reach 10 total\n"
+                "- Summary stats: Total TIER 1 vs TIER 2 count by market (NASDAQ/NSE)"
             ),
-            "Concise dual-strategy trade opportunities under 300 words.",
+            "Concise AI + Technical Combo trade opportunities under 250 words, focused on TIER 1.",
         ),
         (
             "forex", "5/7", "Forex Analysis",
@@ -417,28 +416,45 @@ def run_daily_briefing_with_rate_limiting() -> str:
             "cross_strategy", "7/7", "Cross-Strategy Analysis",
             create_cross_strategy_agent,
             (
-                f"Today is {today}. Run ALL of these queries:\n"
-                "1. common_stocks_both_strategies - NSE cross-strategy matches\n"
-                "2. common_stocks_summary - NSE alignment summary\n"
-                "3. common_stocks_nasdaq - NASDAQ cross-strategy matches\n"
-                "4. common_stocks_nasdaq_summary - NASDAQ alignment summary\n\n"
-                "Provide a CONCISE summary (under 350 words) with TWO sections:\n\n"
-                "**NSE 500 Cross-Strategy:**\n"
-                "- Total stocks in both strategies, ALIGNED vs CONFLICTING count\n"
-                "- Top 10 aligned stocks with ticker, S1 direction, S1 tier, S2 grade, "
-                "S2 confidence%\n\n"
-                "**NASDAQ 100 Cross-Strategy:**\n"
-                "- Total stocks in both strategies, ALIGNED vs CONFLICTING count\n"
-                "- Top 10 aligned stocks with ticker, S1 direction, S1 tier, S2 grade, "
-                "S2 confidence%\n\n"
-                "Highlight ALIGNED stocks as highest-conviction trades. "
-                "Flag CONFLICTING stocks as caution zones."
+                f"Today is {today}. Run ALL of these 8 queries (4 NSE categories + 4 NASDAQ categories):\n\n"
+                "NSE 500 Queries:\n"
+                "1. nse_cat1_below_20 - Price < ₹20\n"
+                "2. nse_cat2_20_to_100 - Price ₹20-₹100\n"
+                "3. nse_cat3_100_to_200 - Price ₹100-₹200\n"
+                "4. nse_cat4_above_200 - Price > ₹200\n\n"
+                "NASDAQ 100 Queries:\n"
+                "5. nasdaq_cat1_below_20 - Price < $20\n"
+                "6. nasdaq_cat2_20_to_100 - Price $20-$100\n"
+                "7. nasdaq_cat3_100_to_200 - Price $100-$200\n"
+                "8. nasdaq_cat4_above_200 - Price > $200\n\n"
+                "STRATEGY DEFINITIONS:\n"
+                "- Strategy 1: ML Classifier (ml_nse_trading_predictions / ml_trading_predictions)\n"
+                "  → Buy/Sell signals with confidence %, signal strength, RSI\n"
+                "- Strategy 2: AI 3-day Price Predictions (ai_prediction_history with days_ahead=3)\n"
+                "  → Predicted price → BULLISH if price goes up, BEARISH if price goes down\n"
+                "- ALIGNED: When both agree on direction (ML Buy + AI Bullish OR ML Sell + AI Bearish)\n\n"
+                "Provide a CONCISE summary (under 400 words) with TWO main sections:\n\n"
+                "**NSE 500 Cross-Strategy (4 Price Categories):**\n"
+                "For EACH category, show top 10 aligned stocks (both Bullish and Bearish):\n"
+                "- Category 1 (<₹20): Ticker, S1 ML Signal, S1 Confidence%, S2 AI Direction, S2 Change%, Price, Target\n"
+                "- Category 2 (₹20-₹100): Same format\n"
+                "- Category 3 (₹100-₹200): Same format\n"
+                "- Category 4 (>₹200): Same format\n\n"
+                "**NASDAQ 100 Cross-Strategy (4 Price Categories):**\n"
+                "For EACH category, show top 10 aligned stocks (both Bullish and Bearish):\n"
+                "- Category 1 (<$20): Ticker, S1 ML Signal, S1 Confidence%, S2 AI Direction, S2 Change%, Price, Target\n"
+                "- Category 2 ($20-$100): Same format\n"
+                "- Category 3 ($100-$200): Same format\n"
+                "- Category 4 (>$200): Same format\n\n"
+                "Highlight ALIGNED stocks as highest-conviction trades where both ML and AI agree. "
+                "Include both BULLISH and BEARISH signals in each category."
             ),
             (
-                "Concise cross-strategy summary under 350 words with TWO sections: "
-                "(1) NSE top 10 aligned stocks with ALIGNED/CONFLICTING counts, and "
-                "(2) NASDAQ top 10 aligned stocks with ALIGNED/CONFLICTING counts. "
-                "All stocks must match BOTH Strategy 1 and Strategy 2 recommendations."
+                "Concise cross-strategy summary under 400 words with TWO sections: "
+                "(1) NSE with 4 price categories showing top 10 aligned stocks per category, and "
+                "(2) NASDAQ with 4 price categories showing top 10 aligned stocks per category. "
+                "Include both Bullish and Bearish signals. All stocks must have Strategy 1 (ML Classifier) "
+                "and Strategy 2 (AI Price Predictions) agreeing on direction."
             ),
         ),
     ]

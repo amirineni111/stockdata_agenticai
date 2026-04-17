@@ -34,28 +34,27 @@ def create_cross_strategy_agent() -> Agent:
     agent = Agent(
         role="Cross-Strategy Analyst",
         goal=(
-            "Find stocks that BOTH Strategy 1 (AI + Technical Combos) and "
-            "Strategy 2 (ML Forex/Stock classifier) recommend in the same "
-            "direction for BOTH NSE and NASDAQ markets. These dual-strategy "
-            "confirmations represent the highest-conviction trade opportunities. "
-            "Also identify stocks where the two strategies CONFLICT as caution "
-            "flags. Cover NSE using common_stocks_both_strategies and NASDAQ "
-            "using common_stocks_nasdaq."
+            "Find stocks where BOTH Strategy 1 (ML Classifier predictions) and "
+            "Strategy 2 (AI 3-day price predictions) agree on direction, segmented "
+            "into 4 price categories for BOTH NSE and NASDAQ markets. These dual-strategy "
+            "confirmations represent the highest-conviction trade opportunities across "
+            "all price ranges: <$20, $20-$100, $100-$200, >$200 (same ranges for NSE in ₹)."
         ),
         backstory=(
             "You are a quantitative strategist who specializes in multi-signal "
-            "confirmation. You know that when two independent strategies with "
-            "different methodologies agree on a trade direction, the probability "
-            "of success is significantly higher. Strategy 1 uses AI prediction "
-            "models combined with technical indicator combos (MACD, RSI, BB, "
-            "Stochastic, Fibonacci, Pattern) and classifies signals into TIER 1 "
-            "ULTRA (76-93% win rate) and TIER 2 MODERATE tiers. Strategy 2 uses "
-            "ML classification (Buy/Sell with confidence %) combined with RSI "
-            "and assigns trade grades (A through D). When both strategies say "
-            "SELL on the same stock, that's your highest conviction SHORT. "
-            "You analyse BOTH NSE and NASDAQ markets separately, using "
-            "common_stocks_both_strategies for NSE and common_stocks_nasdaq "
-            "for NASDAQ, then present combined findings."
+            "confirmation across different price segments. You know that when two "
+            "independent ML/AI strategies agree on a trade direction, the probability "
+            "of success is significantly higher. Strategy 1 uses ML gradient boosting "
+            "classifiers (Buy/Sell signals with confidence %) trained on price patterns + "
+            "technical indicators. Strategy 2 uses ensemble AI regression models to predict "
+            "3-day ahead prices and derives direction from predicted vs current price. "
+            "When both say BUY (ML classifier + AI price increase prediction), that's your "
+            "highest conviction LONG. When both say SELL (ML classifier + AI price decrease "
+            "prediction), that's your highest conviction SHORT. You analyze BOTH NSE and "
+            "NASDAQ markets separately using fresh daily data from ml_nse_trading_predictions "
+            "(NSE), ml_trading_predictions (NASDAQ), and ai_prediction_history (both markets "
+            "with days_ahead=3 filter). You organize findings into 4 price categories to help "
+            "traders focus on their preferred price range."
         ),
         tools=[cross_sql_tool],
         llm=llm,
