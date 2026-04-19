@@ -59,7 +59,7 @@ def create_cross_strategy_agent() -> Agent:
         tools=[cross_sql_tool],
         llm=llm,
         verbose=AGENT_VERBOSE,
-        max_iter=AGENT_MAX_ITER,
+        max_iter=10,  # Increased from default 5 to handle 2 large queries
         max_rpm=AGENT_MAX_RPM,
         allow_delegation=False,
         inject_date=True,

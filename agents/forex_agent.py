@@ -67,7 +67,7 @@ def create_forex_agent() -> Agent:
         tools=[forex_sql_tool],
         llm=llm,
         verbose=AGENT_VERBOSE,
-        max_iter=AGENT_MAX_ITER,
+        max_iter=10,  # Increased from default 5 to handle comprehensive forex data
         max_rpm=AGENT_MAX_RPM,
         allow_delegation=False,
         inject_date=True,

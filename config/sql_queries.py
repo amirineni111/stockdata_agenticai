@@ -544,270 +544,258 @@ STRATEGY_TRADE_QUERIES = {
 # =============================================================================
 
 FOREX_QUERIES = {
-    "forex_latest_rates": """
-        SELECT
-            symbol,
-            currency_from,
-            currency_to,
-            trading_date,
-            open_price,
-            high_price,
-            low_price,
-            close_price,
-            daily_change,
-            daily_change_pct,
-            fifty_day_avg,
-            two_hundred_day_avg
-        FROM forex_hist_data
-        WHERE trading_date = (
-            SELECT MAX(trading_date) FROM forex_hist_data
+    # ========================================================================
+    # Consolidated Forex Analysis Query (All Data in 1 Query)
+    # ========================================================================
+    "forex_comprehensive_analysis": """
+        WITH latest_rates AS (
+            SELECT
+                f.symbol,
+                f.currency_from,
+                f.currency_to,
+                f.trading_date,
+                f.open_price,
+                f.high_price,
+                f.low_price,
+                f.close_price,
+                f.daily_change,
+                f.daily_change_pct,
+                f.fifty_day_avg,
+                f.two_hundred_day_avg
+            FROM forex_hist_data f
+            WHERE f.trading_date = (SELECT MAX(trading_date) FROM forex_hist_data)
+        ),
+        weekly_stats AS (
+            SELECT
+                symbol,
+                MIN(close_price) AS week_low,
+                MAX(close_price) AS week_high,
+                (SELECT TOP 1 close_price FROM forex_hist_data f2
+                 WHERE f2.symbol = f1.symbol
+                 AND f2.trading_date >= DATEADD(DAY, -7, GETDATE())
+                 ORDER BY f2.trading_date ASC) AS week_open,
+                (SELECT TOP 1 close_price FROM forex_hist_data f3
+                 WHERE f3.symbol = f1.symbol
+                 AND f3.trading_date >= DATEADD(DAY, -7, GETDATE())
+                 ORDER BY f3.trading_date DESC) AS week_close
+            FROM forex_hist_data f1
+            WHERE f1.trading_date >= DATEADD(DAY, -7, GETDATE())
+            GROUP BY symbol
+        ),
+        ml_signals AS (
+            SELECT
+                currency_pair,
+                CAST(close_price AS FLOAT) AS ml_close_price,
+                predicted_signal AS ml_signal,
+                ROUND(CAST(signal_confidence AS FLOAT) * 100, 1) AS ml_confidence_pct,
+                ROUND(CAST(prob_buy AS FLOAT), 3) AS prob_buy,
+                ROUND(CAST(prob_sell AS FLOAT), 3) AS prob_sell,
+                ROUND(CAST(prob_hold AS FLOAT), 3) AS prob_hold,
+                model_name,
+                model_version
+            FROM forex_ml_predictions
+            WHERE prediction_date = (SELECT MAX(prediction_date) FROM forex_ml_predictions)
+        ),
+        technical_indicators AS (
+            SELECT
+                r.symbol,
+                r.trading_date,
+                -- RSI
+                ROUND(r.RSI, 1) AS rsi,
+                CASE
+                    WHEN r.RSI > 70 THEN 'OVERBOUGHT'
+                    WHEN r.RSI < 30 THEN 'OVERSOLD'
+                    WHEN r.RSI > 60 THEN 'BULLISH'
+                    WHEN r.RSI < 40 THEN 'BEARISH'
+                    ELSE 'NEUTRAL'
+                END AS rsi_signal,
+                -- MACD
+                ROUND(m.MACD, 4) AS macd_line,
+                ROUND(m.Signal_Line, 4) AS macd_signal_line,
+                ROUND(m.MACD - m.Signal_Line, 4) AS macd_histogram,
+                CASE
+                    WHEN m.MACD > m.Signal_Line AND (m.MACD - m.Signal_Line) > 0 THEN 'BULLISH'
+                    WHEN m.MACD < m.Signal_Line AND (m.MACD - m.Signal_Line) < 0 THEN 'BEARISH'
+                    ELSE 'NEUTRAL'
+                END AS macd_signal,
+                -- Bollinger Bands
+                ROUND(b.Upper_Band, 4) AS bb_upper,
+                ROUND(b.Lower_Band, 4) AS bb_lower,
+                ROUND(b.SMA_20, 4) AS bb_middle,
+                CASE
+                    WHEN b.close_price > b.Upper_Band THEN 'OVERBOUGHT'
+                    WHEN b.close_price < b.Lower_Band THEN 'OVERSOLD'
+                    ELSE 'IN-BAND'
+                END AS bb_signal,
+                -- Stochastic
+                ROUND(s.stoch_14d_k, 1) AS stoch_k,
+                ROUND(s.stoch_14d_d, 1) AS stoch_d,
+                CASE
+                    WHEN s.stoch_14d_k > 80 THEN 'OVERBOUGHT'
+                    WHEN s.stoch_14d_k < 20 THEN 'OVERSOLD'
+                    WHEN s.stoch_14d_k > s.stoch_14d_d THEN 'BULLISH'
+                    WHEN s.stoch_14d_k < s.stoch_14d_d THEN 'BEARISH'
+                    ELSE 'NEUTRAL'
+                END AS stoch_signal,
+                -- Technical Consensus Score
+                (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
+                 + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
+                 + CASE WHEN s.stoch_14d_k > s.stoch_14d_d THEN 1 ELSE -1 END
+                 + CASE WHEN b.close_price > b.SMA_20 THEN 1 ELSE -1 END
+                ) AS tech_score,
+                CASE
+                    WHEN (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
+                          + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
+                          + CASE WHEN s.stoch_14d_k > s.stoch_14d_d THEN 1 ELSE -1 END
+                          + CASE WHEN b.close_price > b.SMA_20 THEN 1 ELSE -1 END) >= 3
+                    THEN 'STRONG BUY'
+                    WHEN (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
+                          + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
+                          + CASE WHEN s.stoch_14d_k > s.stoch_14d_d THEN 1 ELSE -1 END
+                          + CASE WHEN b.close_price > b.SMA_20 THEN 1 ELSE -1 END) >= 1
+                    THEN 'BUY'
+                    WHEN (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
+                          + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
+                          + CASE WHEN s.stoch_14d_k > s.stoch_14d_d THEN 1 ELSE -1 END
+                          + CASE WHEN b.close_price > b.SMA_20 THEN 1 ELSE -1 END) <= -3
+                    THEN 'STRONG SELL'
+                    WHEN (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
+                          + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
+                          + CASE WHEN s.stoch_14d_k > s.stoch_14d_d THEN 1 ELSE -1 END
+                          + CASE WHEN b.close_price > b.SMA_20 THEN 1 ELSE -1 END) <= -1
+                    THEN 'SELL'
+                    ELSE 'HOLD'
+                END AS tech_consensus
+            FROM Forex_RSI_calculation r
+            LEFT JOIN Forex_macd m ON r.symbol = m.symbol AND r.trading_date = m.trading_date
+            LEFT JOIN Forex_bollingerband b ON r.symbol = b.symbol AND r.trading_date = b.trading_date
+            LEFT JOIN Forex_stochastic s ON r.symbol = s.ticker AND s.trading_date = r.trading_date
+            WHERE r.trading_date = (SELECT MAX(trading_date) FROM Forex_RSI_calculation)
+        ),
+        support_resistance AS (
+            SELECT
+                ticker AS symbol,
+                s1 AS support_level,
+                r1 AS resistance_level,
+                s2 AS support_level_2,
+                r2 AS resistance_level_2,
+                pivot_point,
+                ROUND(((r1 - close_price) / NULLIF(close_price, 0)) * 100, 2) AS pct_to_resistance,
+                ROUND(((close_price - s1) / NULLIF(close_price, 0)) * 100, 2) AS pct_from_support,
+                pivot_status,
+                sr_trade_signal
+            FROM Forex_support_resistance
+            WHERE trading_date = (SELECT MAX(trading_date) FROM Forex_support_resistance)
+        ),
+        crossover_signals AS (
+            SELECT
+                ticker AS symbol,
+                bb_trade_signal,
+                macd_signal AS crossover_macd_signal,
+                rsi_trade_signal,
+                sma_trade_signal,
+                stoch_signal AS crossover_stoch_signal,
+                fib_signal,
+                pattern_signal AS crossover_pattern_signal,
+                bullish_count,
+                bearish_count
+            FROM vw_crossover_signals_Forex
+            WHERE trading_date = (SELECT MAX(trading_date) FROM vw_crossover_signals_Forex)
+        ),
+        recent_patterns AS (
+            SELECT
+                ticker AS symbol,
+                STRING_AGG(patterns_detected, '; ') AS recent_patterns,
+                STRING_AGG(pattern_signal, ', ') AS pattern_signals
+            FROM Forex_patterns
+            WHERE trading_date >= DATEADD(DAY, -7, (SELECT MAX(trading_date) FROM Forex_patterns))
+                AND pattern_signal IS NOT NULL
+            GROUP BY ticker
         )
-        ORDER BY symbol
-    """,
-
-    "forex_ml_predictions_latest": """
+        -- Main SELECT combining all CTEs
         SELECT
-            currency_pair,
-            prediction_date,
-            CAST(close_price AS FLOAT) AS close_price,
-            predicted_signal,
-            ROUND(CAST(signal_confidence AS FLOAT) * 100, 1) AS confidence_pct,
-            ROUND(CAST(prob_buy AS FLOAT), 3) AS prob_buy,
-            ROUND(CAST(prob_sell AS FLOAT), 3) AS prob_sell,
-            ROUND(CAST(prob_hold AS FLOAT), 3) AS prob_hold,
-            model_name,
-            model_version
-        FROM forex_ml_predictions
-        WHERE prediction_date = (
-            SELECT MAX(prediction_date) FROM forex_ml_predictions
-        )
-            AND CAST(signal_confidence AS FLOAT) >= 0.55
-        ORDER BY signal_confidence DESC
-    """,
-
-    "forex_ml_signal_summary": """
-        SELECT
-            predicted_signal,
-            COUNT(*) AS total_pairs,
-            ROUND(CAST(AVG(signal_confidence) AS FLOAT) * 100, 1) AS avg_confidence_pct,
-            STRING_AGG(currency_pair, ', ') AS pairs
-        FROM forex_ml_predictions
-        WHERE prediction_date = (
-            SELECT MAX(prediction_date) FROM forex_ml_predictions
-        )
-        GROUP BY predicted_signal
-    """,
-
-    "forex_weekly_trend": """
-        SELECT
-            symbol,
-            MIN(close_price) AS week_low,
-            MAX(close_price) AS week_high,
-            (SELECT TOP 1 close_price FROM forex_hist_data f2
-             WHERE f2.symbol = f1.symbol
-             ORDER BY f2.trading_date ASC) AS week_open,
-            (SELECT TOP 1 close_price FROM forex_hist_data f3
-             WHERE f3.symbol = f1.symbol
-             ORDER BY f3.trading_date DESC) AS week_close
-        FROM forex_hist_data f1
-        WHERE trading_date >= DATEADD(DAY, -7, GETDATE())
-        GROUP BY symbol
-    """,
-
-    # --- Forex Technical Indicator Queries (from streamlit-dashboard views) ---
-
-    "forex_technical_signals": """
-        SELECT
-            r.symbol,
-            r.trading_date,
-            b.close_price,
-            r.RSI AS rsi,
+            lr.symbol,
+            lr.currency_from,
+            lr.currency_to,
+            lr.trading_date,
+            lr.close_price,
+            lr.open_price,
+            lr.high_price,
+            lr.low_price,
+            lr.daily_change,
+            lr.daily_change_pct,
+            lr.fifty_day_avg,
+            lr.two_hundred_day_avg,
+            -- Weekly Stats
+            ws.week_low,
+            ws.week_high,
+            ws.week_open,
+            ws.week_close,
+            -- ML Predictions
+            ml.ml_signal,
+            ml.ml_confidence_pct,
+            ml.prob_buy,
+            ml.prob_sell,
+            ml.prob_hold,
+            ml.model_name,
+            -- Technical Indicators
+            ti.rsi,
+            ti.rsi_signal,
+            ti.macd_line,
+            ti.macd_signal_line,
+            ti.macd_histogram,
+            ti.macd_signal,
+            ti.bb_upper,
+            ti.bb_lower,
+            ti.bb_middle,
+            ti.bb_signal,
+            ti.stoch_k,
+            ti.stoch_d,
+            ti.stoch_signal,
+            ti.tech_score,
+            ti.tech_consensus,
+            -- Support/Resistance
+            sr.support_level,
+            sr.resistance_level,
+            sr.support_level_2,
+            sr.resistance_level_2,
+            sr.pivot_point,
+            sr.pct_to_resistance,
+            sr.pct_from_support,
+            sr.pivot_status,
+            sr.sr_trade_signal,
+            -- Crossover Signals
+            cs.bb_trade_signal,
+            cs.crossover_macd_signal,
+            cs.rsi_trade_signal,
+            cs.sma_trade_signal,
+            cs.crossover_stoch_signal,
+            cs.fib_signal,
+            cs.crossover_pattern_signal,
+            cs.bullish_count,
+            cs.bearish_count,
+            -- Recent Patterns
+            rp.recent_patterns,
+            rp.pattern_signals,
+            -- Technical vs ML Agreement
             CASE
-                WHEN r.RSI > 70 THEN 'OVERBOUGHT'
-                WHEN r.RSI < 30 THEN 'OVERSOLD'
-                WHEN r.RSI > 60 THEN 'BULLISH'
-                WHEN r.RSI < 40 THEN 'BEARISH'
-                ELSE 'NEUTRAL'
-            END AS rsi_signal,
-            m.MACD AS macd_line,
-            m.Signal_Line AS signal_line,
-            (m.MACD - m.Signal_Line) AS macd_histogram,
-            CASE
-                WHEN m.MACD > m.Signal_Line AND (m.MACD - m.Signal_Line) > 0 THEN 'BULLISH'
-                WHEN m.MACD < m.Signal_Line AND (m.MACD - m.Signal_Line) < 0 THEN 'BEARISH'
-                ELSE 'NEUTRAL'
-            END AS macd_signal,
-            b.Upper_Band AS bb_upper,
-            b.Lower_Band AS bb_lower,
-            b.SMA_20 AS bb_middle,
-            CASE
-                WHEN b.close_price > b.Upper_Band THEN 'OVERBOUGHT'
-                WHEN b.close_price < b.Lower_Band THEN 'OVERSOLD'
-                ELSE 'IN-BAND'
-            END AS bb_signal,
-            s.stoch_14d_k AS stoch_k,
-            s.stoch_14d_d AS stoch_d,
-            CASE
-                WHEN s.stoch_14d_k > 80 THEN 'OVERBOUGHT'
-                WHEN s.stoch_14d_k < 20 THEN 'OVERSOLD'
-                WHEN s.stoch_14d_k > s.stoch_14d_d THEN 'BULLISH'
-                WHEN s.stoch_14d_k < s.stoch_14d_d THEN 'BEARISH'
-                ELSE 'NEUTRAL'
-            END AS stoch_signal
-        FROM Forex_RSI_calculation r
-        LEFT JOIN Forex_macd m ON r.symbol = m.symbol AND r.trading_date = m.trading_date
-        LEFT JOIN Forex_bollingerband b ON r.symbol = b.symbol AND r.trading_date = b.trading_date
-        LEFT JOIN Forex_stochastic s ON r.symbol = s.ticker AND s.trading_date = r.trading_date
-        WHERE r.trading_date = (SELECT MAX(trading_date) FROM Forex_RSI_calculation)
-        ORDER BY r.symbol
-    """,
-
-    "forex_crossover_signals": """
-        SELECT
-            ticker AS symbol,
-            trading_date,
-            close_price,
-            bb_trade_signal,
-            macd_signal,
-            rsi_trade_signal,
-            sma_trade_signal,
-            stoch_signal,
-            fib_signal,
-            pattern_signal,
-            bullish_count,
-            bearish_count
-        FROM vw_crossover_signals_Forex
-        WHERE trading_date >= DATEADD(DAY, -7, (
-            SELECT MAX(trading_date) FROM vw_crossover_signals_Forex
-        ))
-        ORDER BY trading_date DESC, ticker
-    """,
-
-    "forex_support_resistance": """
-        SELECT
-            ticker AS symbol,
-            trading_date,
-            close_price,
-            s1 AS support_level,
-            r1 AS resistance_level,
-            s2 AS support_level_2,
-            r2 AS resistance_level_2,
-            pivot_point,
-            ROUND(((r1 - close_price) / NULLIF(close_price, 0)) * 100, 3) AS pct_to_resistance,
-            ROUND(((close_price - s1) / NULLIF(close_price, 0)) * 100, 3) AS pct_from_support,
-            pivot_status,
-            sr_trade_signal
-        FROM Forex_support_resistance
-        WHERE trading_date = (SELECT MAX(trading_date) FROM Forex_support_resistance)
-        ORDER BY ticker
-    """,
-
-    "forex_pattern_signals": """
-        SELECT
-            ticker AS symbol,
-            trading_date,
-            patterns_detected,
-            pattern_signal,
-            close_price
-        FROM Forex_patterns
-        WHERE trading_date >= DATEADD(DAY, -7, (
-            SELECT MAX(trading_date) FROM Forex_patterns
-        ))
-            AND pattern_signal IS NOT NULL
-        ORDER BY trading_date DESC, ticker
-    """,
-
-    "forex_technical_vs_ml": """
-        SELECT
-            f.symbol AS currency_pair,
-            f.trading_date,
-            f.close_price,
-            -- Technical Indicators Summary
-            CASE
-                WHEN r.RSI > 70 THEN 'OVERBOUGHT'
-                WHEN r.RSI < 30 THEN 'OVERSOLD'
-                WHEN r.RSI > 60 THEN 'BULLISH'
-                WHEN r.RSI < 40 THEN 'BEARISH'
-                ELSE 'NEUTRAL'
-            END AS rsi_signal,
-            ROUND(r.RSI, 1) AS rsi_value,
-            CASE
-                WHEN m.MACD > m.Signal_Line THEN 'BULLISH'
-                WHEN m.MACD < m.Signal_Line THEN 'BEARISH'
-                ELSE 'NEUTRAL'
-            END AS macd_signal,
-            CASE
-                WHEN f.close_price > bb.Upper_Band THEN 'OVERBOUGHT'
-                WHEN f.close_price < bb.Lower_Band THEN 'OVERSOLD'
-                ELSE 'IN-BAND'
-            END AS bb_signal,
-            CASE
-                WHEN st.stoch_14d_k > 80 THEN 'OVERBOUGHT'
-                WHEN st.stoch_14d_k < 20 THEN 'OVERSOLD'
-                WHEN st.stoch_14d_k > st.stoch_14d_d THEN 'BULLISH'
-                ELSE 'BEARISH'
-            END AS stoch_signal,
-            -- Technical Consensus
-            (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
-             + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
-             + CASE WHEN st.stoch_14d_k > st.stoch_14d_d THEN 1 ELSE -1 END
-             + CASE WHEN f.close_price > bb.SMA_20 THEN 1 ELSE -1 END
-            ) AS tech_score,
-            CASE
-                WHEN (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
-                      + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
-                      + CASE WHEN st.stoch_14d_k > st.stoch_14d_d THEN 1 ELSE -1 END
-                      + CASE WHEN f.close_price > bb.SMA_20 THEN 1 ELSE -1 END) >= 3
-                THEN 'STRONG BUY'
-                WHEN (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
-                      + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
-                      + CASE WHEN st.stoch_14d_k > st.stoch_14d_d THEN 1 ELSE -1 END
-                      + CASE WHEN f.close_price > bb.SMA_20 THEN 1 ELSE -1 END) >= 1
-                THEN 'BUY'
-                WHEN (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
-                      + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
-                      + CASE WHEN st.stoch_14d_k > st.stoch_14d_d THEN 1 ELSE -1 END
-                      + CASE WHEN f.close_price > bb.SMA_20 THEN 1 ELSE -1 END) <= -3
-                THEN 'STRONG SELL'
-                WHEN (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
-                      + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
-                      + CASE WHEN st.stoch_14d_k > st.stoch_14d_d THEN 1 ELSE -1 END
-                      + CASE WHEN f.close_price > bb.SMA_20 THEN 1 ELSE -1 END) <= -1
-                THEN 'SELL'
-                ELSE 'HOLD'
-            END AS tech_consensus,
-            -- ML Prediction
-            ml.predicted_signal AS ml_signal,
-            ROUND(CAST(ml.signal_confidence AS FLOAT) * 100, 1) AS ml_confidence_pct,
-            -- Agreement Check
-            CASE
-                WHEN (
-                    (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
-                     + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
-                     + CASE WHEN st.stoch_14d_k > st.stoch_14d_d THEN 1 ELSE -1 END
-                     + CASE WHEN f.close_price > bb.SMA_20 THEN 1 ELSE -1 END) >= 1
-                    AND ml.predicted_signal = 'Buy'
-                ) OR (
-                    (CASE WHEN r.RSI > 50 THEN 1 ELSE -1 END
-                     + CASE WHEN m.MACD > m.Signal_Line THEN 1 ELSE -1 END
-                     + CASE WHEN st.stoch_14d_k > st.stoch_14d_d THEN 1 ELSE -1 END
-                     + CASE WHEN f.close_price > bb.SMA_20 THEN 1 ELSE -1 END) <= -1
-                    AND ml.predicted_signal = 'Sell'
-                )
+                WHEN (ti.tech_score >= 1 AND ml.ml_signal = 'Buy')
+                  OR (ti.tech_score <= -1 AND ml.ml_signal = 'Sell')
                 THEN 'ALIGNED'
-                WHEN ml.predicted_signal = 'Hold' THEN 'ML NEUTRAL'
+                WHEN ml.ml_signal = 'Hold' THEN 'ML NEUTRAL'
                 ELSE 'CONFLICTING'
             END AS tech_ml_agreement
-        FROM forex_hist_data f
-        LEFT JOIN Forex_RSI_calculation r ON f.symbol = r.symbol AND f.trading_date = r.trading_date
-        LEFT JOIN Forex_macd m ON f.symbol = m.symbol AND f.trading_date = m.trading_date
-        LEFT JOIN Forex_bollingerband bb ON f.symbol = bb.symbol AND f.trading_date = bb.trading_date
-        LEFT JOIN Forex_stochastic st ON f.symbol = st.ticker AND f.trading_date = st.trading_date
-        LEFT JOIN forex_ml_predictions ml ON f.symbol = ml.currency_pair AND f.trading_date = ml.prediction_date
-        WHERE f.trading_date = (SELECT MAX(trading_date) FROM forex_hist_data)
-        ORDER BY tech_score DESC
+        FROM latest_rates lr
+        LEFT JOIN weekly_stats ws ON lr.symbol = ws.symbol
+        LEFT JOIN ml_signals ml ON lr.symbol = ml.currency_pair
+        LEFT JOIN technical_indicators ti ON lr.symbol = ti.symbol
+        LEFT JOIN support_resistance sr ON lr.symbol = sr.symbol
+        LEFT JOIN crossover_signals cs ON lr.symbol = cs.symbol
+        LEFT JOIN recent_patterns rp ON lr.symbol = rp.symbol
+        ORDER BY lr.symbol
     """,
 }
+
 
 # =============================================================================
 # Agent 6: Risk Assessment Agent Queries
@@ -929,11 +917,9 @@ RISK_QUERIES = {
 
 CROSS_STRATEGY_QUERIES = {
     # ========================================================================
-    # NSE 500 Cross-Strategy Queries (4 Price Categories)
+    # NSE 500 Cross-Strategy (All 4 Price Categories in 1 Query)
     # ========================================================================
-    
-    # NSE Category 1: Price < ₹20
-    "nse_cat1_below_20": """
+    "nse_all_categories": """
         WITH s1_ml AS (
             SELECT
                 ml.ticker,
@@ -941,10 +927,13 @@ CROSS_STRATEGY_QUERIES = {
                 ml.predicted_signal,
                 ROUND(ml.confidence_percentage, 1) AS ml_confidence_pct,
                 ml.signal_strength,
-                ROUND(ml.RSI, 1) AS rsi_value,
-                ml.rsi_category,
                 CAST(ml.close_price AS FLOAT) AS current_price,
-                ml.trading_date
+                CASE
+                    WHEN CAST(ml.close_price AS FLOAT) < 20 THEN 'Cat1_Below20'
+                    WHEN CAST(ml.close_price AS FLOAT) < 100 THEN 'Cat2_20to100'
+                    WHEN CAST(ml.close_price AS FLOAT) < 200 THEN 'Cat3_100to200'
+                    ELSE 'Cat4_Above200'
+                END AS price_category
             FROM ml_nse_trading_predictions ml
             INNER JOIN nse_500 nse ON ml.ticker = nse.ticker
             INNER JOIN (
@@ -952,13 +941,11 @@ CROSS_STRATEGY_QUERIES = {
             ) latest ON ml.trading_date = latest.max_date
             WHERE ml.signal_strength IN ('High', 'Medium')
               AND ml.confidence_percentage >= 55
-              AND CAST(ml.close_price AS FLOAT) < 20
         ),
         s2_ai AS (
             SELECT
                 ai.ticker,
                 ai.predicted_price,
-                CAST(hist.close_price AS FLOAT) AS current_price,
                 CASE
                     WHEN ai.predicted_price > CAST(hist.close_price AS FLOAT) THEN 'BULLISH'
                     WHEN ai.predicted_price < CAST(hist.close_price AS FLOAT) THEN 'BEARISH'
@@ -979,227 +966,54 @@ CROSS_STRATEGY_QUERIES = {
             ) latest ON ai.prediction_date = latest.max_date
             WHERE ai.days_ahead = 3
               AND ai.model_name = 'Ensemble'
-        )
-        SELECT TOP 10
-            s1.ticker,
-            s1.company_name,
-            s1.predicted_signal AS s1_ml_signal,
-            s1.ml_confidence_pct AS s1_confidence_pct,
-            s1.signal_strength AS s1_strength,
-            s2.ai_direction AS s2_ai_direction,
-            s2.ai_change_pct AS s2_predicted_change_pct,
-            s1.current_price,
-            s2.predicted_price AS s2_target_price
-        FROM s1_ml s1
-        INNER JOIN s2_ai s2 ON s1.ticker = s2.ticker
-        WHERE (
-            (s1.predicted_signal IN ('Buy', 'BUY') AND s2.ai_direction = 'BULLISH')
-            OR (s1.predicted_signal IN ('Sell', 'SELL') AND s2.ai_direction = 'BEARISH')
-        )
-        ORDER BY s1.ml_confidence_pct DESC
-    """,
-    
-    # NSE Category 2: Price ₹20-₹100
-    "nse_cat2_20_to_100": """
-        WITH s1_ml AS (
-            SELECT
-                ml.ticker,
-                nse.company_name,
-                ml.predicted_signal,
-                ROUND(ml.confidence_percentage, 1) AS ml_confidence_pct,
-                ml.signal_strength,
-                CAST(ml.close_price AS FLOAT) AS current_price
-            FROM ml_nse_trading_predictions ml
-            INNER JOIN nse_500 nse ON ml.ticker = nse.ticker
-            INNER JOIN (
-                SELECT MAX(trading_date) AS max_date FROM ml_nse_trading_predictions
-            ) latest ON ml.trading_date = latest.max_date
-            WHERE ml.signal_strength IN ('High', 'Medium')
-              AND ml.confidence_percentage >= 55
-              AND CAST(ml.close_price AS FLOAT) >= 20
-              AND CAST(ml.close_price AS FLOAT) < 100
         ),
-        s2_ai AS (
+        aligned AS (
             SELECT
-                ai.ticker,
-                ai.predicted_price,
-                CAST(hist.close_price AS FLOAT) AS current_price,
-                CASE
-                    WHEN ai.predicted_price > CAST(hist.close_price AS FLOAT) THEN 'BULLISH'
-                    WHEN ai.predicted_price < CAST(hist.close_price AS FLOAT) THEN 'BEARISH'
-                    ELSE 'NEUTRAL'
-                END AS ai_direction,
-                ROUND(
-                    ((ai.predicted_price - CAST(hist.close_price AS FLOAT)) 
-                    / NULLIF(CAST(hist.close_price AS FLOAT), 0)) * 100, 2
-                ) AS ai_change_pct
-            FROM ai_prediction_history ai
-            INNER JOIN nse_500_hist_data hist 
-                ON ai.ticker = hist.ticker 
-                AND ai.prediction_date = hist.trading_date
-            INNER JOIN (
-                SELECT MAX(prediction_date) AS max_date 
-                FROM ai_prediction_history 
-                WHERE days_ahead = 3
-            ) latest ON ai.prediction_date = latest.max_date
-            WHERE ai.days_ahead = 3
-              AND ai.model_name = 'Ensemble'
+                s1.ticker,
+                s1.company_name,
+                s1.predicted_signal AS s1_ml_signal,
+                s1.ml_confidence_pct,
+                s1.signal_strength,
+                s2.ai_direction AS s2_ai_direction,
+                s2.ai_change_pct AS s2_predicted_change_pct,
+                s1.current_price,
+                s2.predicted_price AS s2_target_price,
+                s1.price_category,
+                ROW_NUMBER() OVER (PARTITION BY s1.price_category ORDER BY s1.ml_confidence_pct DESC) AS rn
+            FROM s1_ml s1
+            INNER JOIN s2_ai s2 ON s1.ticker = s2.ticker
+            WHERE (
+                (s1.predicted_signal IN ('Buy', 'BUY') AND s2.ai_direction = 'BULLISH')
+                OR (s1.predicted_signal IN ('Sell', 'SELL') AND s2.ai_direction = 'BEARISH')
+            )
         )
-        SELECT TOP 10
-            s1.ticker,
-            s1.company_name,
-            s1.predicted_signal AS s1_ml_signal,
-            s1.ml_confidence_pct AS s1_confidence_pct,
-            s1.signal_strength AS s1_strength,
-            s2.ai_direction AS s2_ai_direction,
-            s2.ai_change_pct AS s2_predicted_change_pct,
-            s1.current_price,
-            s2.predicted_price AS s2_target_price
-        FROM s1_ml s1
-        INNER JOIN s2_ai s2 ON s1.ticker = s2.ticker
-        WHERE (
-            (s1.predicted_signal IN ('Buy', 'BUY') AND s2.ai_direction = 'BULLISH')
-            OR (s1.predicted_signal IN ('Sell', 'SELL') AND s2.ai_direction = 'BEARISH')
-        )
-        ORDER BY s1.ml_confidence_pct DESC
+        SELECT
+            price_category,
+            ticker,
+            company_name,
+            s1_ml_signal,
+            ml_confidence_pct,
+            signal_strength,
+            s2_ai_direction,
+            s2_predicted_change_pct,
+            current_price,
+            s2_target_price
+        FROM aligned
+        WHERE rn <= 10
+        ORDER BY 
+            CASE price_category
+                WHEN 'Cat1_Below20' THEN 1
+                WHEN 'Cat2_20to100' THEN 2
+                WHEN 'Cat3_100to200' THEN 3
+                WHEN 'Cat4_Above200' THEN 4
+            END,
+            ml_confidence_pct DESC
     """,
-    
-    # NSE Category 3: Price ₹100-₹200
-    "nse_cat3_100_to_200": """
-        WITH s1_ml AS (
-            SELECT
-                ml.ticker,
-                nse.company_name,
-                ml.predicted_signal,
-                ROUND(ml.confidence_percentage, 1) AS ml_confidence_pct,
-                ml.signal_strength,
-                CAST(ml.close_price AS FLOAT) AS current_price
-            FROM ml_nse_trading_predictions ml
-            INNER JOIN nse_500 nse ON ml.ticker = nse.ticker
-            INNER JOIN (
-                SELECT MAX(trading_date) AS max_date FROM ml_nse_trading_predictions
-            ) latest ON ml.trading_date = latest.max_date
-            WHERE ml.signal_strength IN ('High', 'Medium')
-              AND ml.confidence_percentage >= 55
-              AND CAST(ml.close_price AS FLOAT) >= 100
-              AND CAST(ml.close_price AS FLOAT) < 200
-        ),
-        s2_ai AS (
-            SELECT
-                ai.ticker,
-                ai.predicted_price,
-                CAST(hist.close_price AS FLOAT) AS current_price,
-                CASE
-                    WHEN ai.predicted_price > CAST(hist.close_price AS FLOAT) THEN 'BULLISH'
-                    WHEN ai.predicted_price < CAST(hist.close_price AS FLOAT) THEN 'BEARISH'
-                    ELSE 'NEUTRAL'
-                END AS ai_direction,
-                ROUND(
-                    ((ai.predicted_price - CAST(hist.close_price AS FLOAT)) 
-                    / NULLIF(CAST(hist.close_price AS FLOAT), 0)) * 100, 2
-                ) AS ai_change_pct
-            FROM ai_prediction_history ai
-            INNER JOIN nse_500_hist_data hist 
-                ON ai.ticker = hist.ticker 
-                AND ai.prediction_date = hist.trading_date
-            INNER JOIN (
-                SELECT MAX(prediction_date) AS max_date 
-                FROM ai_prediction_history 
-                WHERE days_ahead = 3
-            ) latest ON ai.prediction_date = latest.max_date
-            WHERE ai.days_ahead = 3
-              AND ai.model_name = 'Ensemble'
-        )
-        SELECT TOP 10
-            s1.ticker,
-            s1.company_name,
-            s1.predicted_signal AS s1_ml_signal,
-            s1.ml_confidence_pct AS s1_confidence_pct,
-            s1.signal_strength AS s1_strength,
-            s2.ai_direction AS s2_ai_direction,
-            s2.ai_change_pct AS s2_predicted_change_pct,
-            s1.current_price,
-            s2.predicted_price AS s2_target_price
-        FROM s1_ml s1
-        INNER JOIN s2_ai s2 ON s1.ticker = s2.ticker
-        WHERE (
-            (s1.predicted_signal IN ('Buy', 'BUY') AND s2.ai_direction = 'BULLISH')
-            OR (s1.predicted_signal IN ('Sell', 'SELL') AND s2.ai_direction = 'BEARISH')
-        )
-        ORDER BY s1.ml_confidence_pct DESC
-    """,
-    
-    # NSE Category 4: Price > ₹200
-    "nse_cat4_above_200": """
-        WITH s1_ml AS (
-            SELECT
-                ml.ticker,
-                nse.company_name,
-                ml.predicted_signal,
-                ROUND(ml.confidence_percentage, 1) AS ml_confidence_pct,
-                ml.signal_strength,
-                CAST(ml.close_price AS FLOAT) AS current_price
-            FROM ml_nse_trading_predictions ml
-            INNER JOIN nse_500 nse ON ml.ticker = nse.ticker
-            INNER JOIN (
-                SELECT MAX(trading_date) AS max_date FROM ml_nse_trading_predictions
-            ) latest ON ml.trading_date = latest.max_date
-            WHERE ml.signal_strength IN ('High', 'Medium')
-              AND ml.confidence_percentage >= 55
-              AND CAST(ml.close_price AS FLOAT) >= 200
-        ),
-        s2_ai AS (
-            SELECT
-                ai.ticker,
-                ai.predicted_price,
-                CAST(hist.close_price AS FLOAT) AS current_price,
-                CASE
-                    WHEN ai.predicted_price > CAST(hist.close_price AS FLOAT) THEN 'BULLISH'
-                    WHEN ai.predicted_price < CAST(hist.close_price AS FLOAT) THEN 'BEARISH'
-                    ELSE 'NEUTRAL'
-                END AS ai_direction,
-                ROUND(
-                    ((ai.predicted_price - CAST(hist.close_price AS FLOAT)) 
-                    / NULLIF(CAST(hist.close_price AS FLOAT), 0)) * 100, 2
-                ) AS ai_change_pct
-            FROM ai_prediction_history ai
-            INNER JOIN nse_500_hist_data hist 
-                ON ai.ticker = hist.ticker 
-                AND ai.prediction_date = hist.trading_date
-            INNER JOIN (
-                SELECT MAX(prediction_date) AS max_date 
-                FROM ai_prediction_history 
-                WHERE days_ahead = 3
-            ) latest ON ai.prediction_date = latest.max_date
-            WHERE ai.days_ahead = 3
-              AND ai.model_name = 'Ensemble'
-        )
-        SELECT TOP 10
-            s1.ticker,
-            s1.company_name,
-            s1.predicted_signal AS s1_ml_signal,
-            s1.ml_confidence_pct AS s1_confidence_pct,
-            s1.signal_strength AS s1_strength,
-            s2.ai_direction AS s2_ai_direction,
-            s2.ai_change_pct AS s2_predicted_change_pct,
-            s1.current_price,
-            s2.predicted_price AS s2_target_price
-        FROM s1_ml s1
-        INNER JOIN s2_ai s2 ON s1.ticker = s2.ticker
-        WHERE (
-            (s1.predicted_signal IN ('Buy', 'BUY') AND s2.ai_direction = 'BULLISH')
-            OR (s1.predicted_signal IN ('Sell', 'SELL') AND s2.ai_direction = 'BEARISH')
-        )
-        ORDER BY s1.ml_confidence_pct DESC
-    """,
-
     
     # ========================================================================
-    # NASDAQ 100 Cross-Strategy Queries (4 Price Categories)
+    # NASDAQ 100 Cross-Strategy (All 4 Price Categories in 1 Query)
     # ========================================================================
-    
-    # NASDAQ Category 1: Price < $20
-    "nasdaq_cat1_below_20": """
+    "nasdaq_all_categories": """
         WITH s1_ml AS (
             SELECT
                 ml.ticker,
@@ -1207,7 +1021,13 @@ CROSS_STRATEGY_QUERIES = {
                 ml.predicted_signal,
                 ROUND(ml.confidence_percentage, 1) AS ml_confidence_pct,
                 ml.signal_strength,
-                CAST(ml.close_price AS FLOAT) AS current_price
+                CAST(ml.close_price AS FLOAT) AS current_price,
+                CASE
+                    WHEN CAST(ml.close_price AS FLOAT) < 20 THEN 'Cat1_Below20'
+                    WHEN CAST(ml.close_price AS FLOAT) < 100 THEN 'Cat2_20to100'
+                    WHEN CAST(ml.close_price AS FLOAT) < 200 THEN 'Cat3_100to200'
+                    ELSE 'Cat4_Above200'
+                END AS price_category
             FROM ml_trading_predictions ml
             INNER JOIN nasdaq_top100 nasdaq ON ml.ticker = nasdaq.ticker
             INNER JOIN (
@@ -1215,13 +1035,11 @@ CROSS_STRATEGY_QUERIES = {
             ) latest ON ml.trading_date = latest.max_date
             WHERE ml.signal_strength IN ('Strong', 'Moderate')
               AND ml.confidence_percentage >= 55
-              AND CAST(ml.close_price AS FLOAT) < 20
         ),
         s2_ai AS (
             SELECT
                 ai.ticker,
                 ai.predicted_price,
-                CAST(hist.close_price AS FLOAT) AS current_price,
                 CASE
                     WHEN ai.predicted_price > CAST(hist.close_price AS FLOAT) THEN 'BULLISH'
                     WHEN ai.predicted_price < CAST(hist.close_price AS FLOAT) THEN 'BEARISH'
@@ -1242,220 +1060,51 @@ CROSS_STRATEGY_QUERIES = {
             ) latest ON ai.prediction_date = latest.max_date
             WHERE ai.days_ahead = 3
               AND ai.model_name = 'Ensemble'
-        )
-        SELECT TOP 10
-            s1.ticker,
-            s1.company_name,
-            s1.predicted_signal AS s1_ml_signal,
-            s1.ml_confidence_pct AS s1_confidence_pct,
-            s1.signal_strength AS s1_strength,
-            s2.ai_direction AS s2_ai_direction,
-            s2.ai_change_pct AS s2_predicted_change_pct,
-            s1.current_price,
-            s2.predicted_price AS s2_target_price
-        FROM s1_ml s1
-        INNER JOIN s2_ai s2 ON s1.ticker = s2.ticker
-        WHERE (
-            (s1.predicted_signal IN ('Buy', 'BUY') AND s2.ai_direction = 'BULLISH')
-            OR (s1.predicted_signal IN ('Sell', 'SELL') AND s2.ai_direction = 'BEARISH')
-        )
-        ORDER BY s1.ml_confidence_pct DESC
-    """,
-    
-    # NASDAQ Category 2: Price $20-$100
-    "nasdaq_cat2_20_to_100": """
-        WITH s1_ml AS (
-            SELECT
-                ml.ticker,
-                nasdaq.company_name,
-                ml.predicted_signal,
-                ROUND(ml.confidence_percentage, 1) AS ml_confidence_pct,
-                ml.signal_strength,
-                CAST(ml.close_price AS FLOAT) AS current_price
-            FROM ml_trading_predictions ml
-            INNER JOIN nasdaq_top100 nasdaq ON ml.ticker = nasdaq.ticker
-            INNER JOIN (
-                SELECT MAX(trading_date) AS max_date FROM ml_trading_predictions
-            ) latest ON ml.trading_date = latest.max_date
-            WHERE ml.signal_strength IN ('Strong', 'Moderate')
-              AND ml.confidence_percentage >= 55
-              AND CAST(ml.close_price AS FLOAT) >= 20
-              AND CAST(ml.close_price AS FLOAT) < 100
         ),
-        s2_ai AS (
+        aligned AS (
             SELECT
-                ai.ticker,
-                ai.predicted_price,
-                CAST(hist.close_price AS FLOAT) AS current_price,
-                CASE
-                    WHEN ai.predicted_price > CAST(hist.close_price AS FLOAT) THEN 'BULLISH'
-                    WHEN ai.predicted_price < CAST(hist.close_price AS FLOAT) THEN 'BEARISH'
-                    ELSE 'NEUTRAL'
-                END AS ai_direction,
-                ROUND(
-                    ((ai.predicted_price - CAST(hist.close_price AS FLOAT)) 
-                    / NULLIF(CAST(hist.close_price AS FLOAT), 0)) * 100, 2
-                ) AS ai_change_pct
-            FROM ai_prediction_history ai
-            INNER JOIN nasdaq_100_hist_data hist 
-                ON ai.ticker = hist.ticker 
-                AND ai.prediction_date = hist.trading_date
-            INNER JOIN (
-                SELECT MAX(prediction_date) AS max_date 
-                FROM ai_prediction_history 
-                WHERE days_ahead = 3
-            ) latest ON ai.prediction_date = latest.max_date
-            WHERE ai.days_ahead = 3
-              AND ai.model_name = 'Ensemble'
+                s1.ticker,
+                s1.company_name,
+                s1.predicted_signal AS s1_ml_signal,
+                s1.ml_confidence_pct,
+                s1.signal_strength,
+                s2.ai_direction AS s2_ai_direction,
+                s2.ai_change_pct AS s2_predicted_change_pct,
+                s1.current_price,
+                s2.predicted_price AS s2_target_price,
+                s1.price_category,
+                ROW_NUMBER() OVER (PARTITION BY s1.price_category ORDER BY s1.ml_confidence_pct DESC) AS rn
+            FROM s1_ml s1
+            INNER JOIN s2_ai s2 ON s1.ticker = s2.ticker
+            WHERE (
+                (s1.predicted_signal IN ('Buy', 'BUY') AND s2.ai_direction = 'BULLISH')
+                OR (s1.predicted_signal IN ('Sell', 'SELL') AND s2.ai_direction = 'BEARISH')
+            )
         )
-        SELECT TOP 10
-            s1.ticker,
-            s1.company_name,
-            s1.predicted_signal AS s1_ml_signal,
-            s1.ml_confidence_pct AS s1_confidence_pct,
-            s1.signal_strength AS s1_strength,
-            s2.ai_direction AS s2_ai_direction,
-            s2.ai_change_pct AS s2_predicted_change_pct,
-            s1.current_price,
-            s2.predicted_price AS s2_target_price
-        FROM s1_ml s1
-        INNER JOIN s2_ai s2 ON s1.ticker = s2.ticker
-        WHERE (
-            (s1.predicted_signal IN ('Buy', 'BUY') AND s2.ai_direction = 'BULLISH')
-            OR (s1.predicted_signal IN ('Sell', 'SELL') AND s2.ai_direction = 'BEARISH')
-        )
-        ORDER BY s1.ml_confidence_pct DESC
-    """,
-    
-    # NASDAQ Category 3: Price $100-$200
-    "nasdaq_cat3_100_to_200": """
-        WITH s1_ml AS (
-            SELECT
-                ml.ticker,
-                nasdaq.company_name,
-                ml.predicted_signal,
-                ROUND(ml.confidence_percentage, 1) AS ml_confidence_pct,
-                ml.signal_strength,
-                CAST(ml.close_price AS FLOAT) AS current_price
-            FROM ml_trading_predictions ml
-            INNER JOIN nasdaq_top100 nasdaq ON ml.ticker = nasdaq.ticker
-            INNER JOIN (
-                SELECT MAX(trading_date) AS max_date FROM ml_trading_predictions
-            ) latest ON ml.trading_date = latest.max_date
-            WHERE ml.signal_strength IN ('Strong', 'Moderate')
-              AND ml.confidence_percentage >= 55
-              AND CAST(ml.close_price AS FLOAT) >= 100
-              AND CAST(ml.close_price AS FLOAT) < 200
-        ),
-        s2_ai AS (
-            SELECT
-                ai.ticker,
-                ai.predicted_price,
-                CAST(hist.close_price AS FLOAT) AS current_price,
-                CASE
-                    WHEN ai.predicted_price > CAST(hist.close_price AS FLOAT) THEN 'BULLISH'
-                    WHEN ai.predicted_price < CAST(hist.close_price AS FLOAT) THEN 'BEARISH'
-                    ELSE 'NEUTRAL'
-                END AS ai_direction,
-                ROUND(
-                    ((ai.predicted_price - CAST(hist.close_price AS FLOAT)) 
-                    / NULLIF(CAST(hist.close_price AS FLOAT), 0)) * 100, 2
-                ) AS ai_change_pct
-            FROM ai_prediction_history ai
-            INNER JOIN nasdaq_100_hist_data hist 
-                ON ai.ticker = hist.ticker 
-                AND ai.prediction_date = hist.trading_date
-            INNER JOIN (
-                SELECT MAX(prediction_date) AS max_date 
-                FROM ai_prediction_history 
-                WHERE days_ahead = 3
-            ) latest ON ai.prediction_date = latest.max_date
-            WHERE ai.days_ahead = 3
-              AND ai.model_name = 'Ensemble'
-        )
-        SELECT TOP 10
-            s1.ticker,
-            s1.company_name,
-            s1.predicted_signal AS s1_ml_signal,
-            s1.ml_confidence_pct AS s1_confidence_pct,
-            s1.signal_strength AS s1_strength,
-            s2.ai_direction AS s2_ai_direction,
-            s2.ai_change_pct AS s2_predicted_change_pct,
-            s1.current_price,
-            s2.predicted_price AS s2_target_price
-        FROM s1_ml s1
-        INNER JOIN s2_ai s2 ON s1.ticker = s2.ticker
-        WHERE (
-            (s1.predicted_signal IN ('Buy', 'BUY') AND s2.ai_direction = 'BULLISH')
-            OR (s1.predicted_signal IN ('Sell', 'SELL') AND s2.ai_direction = 'BEARISH')
-        )
-        ORDER BY s1.ml_confidence_pct DESC
-    """,
-    
-    # NASDAQ Category 4: Price > $200
-    "nasdaq_cat4_above_200": """
-        WITH s1_ml AS (
-            SELECT
-                ml.ticker,
-                nasdaq.company_name,
-                ml.predicted_signal,
-                ROUND(ml.confidence_percentage, 1) AS ml_confidence_pct,
-                ml.signal_strength,
-                CAST(ml.close_price AS FLOAT) AS current_price
-            FROM ml_trading_predictions ml
-            INNER JOIN nasdaq_top100 nasdaq ON ml.ticker = nasdaq.ticker
-            INNER JOIN (
-                SELECT MAX(trading_date) AS max_date FROM ml_trading_predictions
-            ) latest ON ml.trading_date = latest.max_date
-            WHERE ml.signal_strength IN ('Strong', 'Moderate')
-              AND ml.confidence_percentage >= 55
-              AND CAST(ml.close_price AS FLOAT) >= 200
-        ),
-        s2_ai AS (
-            SELECT
-                ai.ticker,
-                ai.predicted_price,
-                CAST(hist.close_price AS FLOAT) AS current_price,
-                CASE
-                    WHEN ai.predicted_price > CAST(hist.close_price AS FLOAT) THEN 'BULLISH'
-                    WHEN ai.predicted_price < CAST(hist.close_price AS FLOAT) THEN 'BEARISH'
-                    ELSE 'NEUTRAL'
-                END AS ai_direction,
-                ROUND(
-                    ((ai.predicted_price - CAST(hist.close_price AS FLOAT)) 
-                    / NULLIF(CAST(hist.close_price AS FLOAT), 0)) * 100, 2
-                ) AS ai_change_pct
-            FROM ai_prediction_history ai
-            INNER JOIN nasdaq_100_hist_data hist 
-                ON ai.ticker = hist.ticker 
-                AND ai.prediction_date = hist.trading_date
-            INNER JOIN (
-                SELECT MAX(prediction_date) AS max_date 
-                FROM ai_prediction_history 
-                WHERE days_ahead = 3
-            ) latest ON ai.prediction_date = latest.max_date
-            WHERE ai.days_ahead = 3
-              AND ai.model_name = 'Ensemble'
-        )
-        SELECT TOP 10
-            s1.ticker,
-            s1.company_name,
-            s1.predicted_signal AS s1_ml_signal,
-            s1.ml_confidence_pct AS s1_confidence_pct,
-            s1.signal_strength AS s1_strength,
-            s2.ai_direction AS s2_ai_direction,
-            s2.ai_change_pct AS s2_predicted_change_pct,
-            s1.current_price,
-            s2.predicted_price AS s2_target_price
-        FROM s1_ml s1
-        INNER JOIN s2_ai s2 ON s1.ticker = s2.ticker
-        WHERE (
-            (s1.predicted_signal IN ('Buy', 'BUY') AND s2.ai_direction = 'BULLISH')
-            OR (s1.predicted_signal IN ('Sell', 'SELL') AND s2.ai_direction = 'BEARISH')
-        )
-        ORDER BY s1.ml_confidence_pct DESC
+        SELECT
+            price_category,
+            ticker,
+            company_name,
+            s1_ml_signal,
+            ml_confidence_pct,
+            signal_strength,
+            s2_ai_direction,
+            s2_predicted_change_pct,
+            current_price,
+            s2_target_price
+        FROM aligned
+        WHERE rn <= 10
+        ORDER BY 
+            CASE price_category
+                WHEN 'Cat1_Below20' THEN 1
+                WHEN 'Cat2_20to100' THEN 2
+                WHEN 'Cat3_100to200' THEN 3
+                WHEN 'Cat4_Above200' THEN 4
+            END,
+            ml_confidence_pct DESC
     """,
 }
+
 # =============================================================================
 # Agent 8: Fair Value / Valuation Agent Queries (NOT CURRENTLY IN USE)
 # (Uses vw_fair_value_estimates view for Graham Number, PEG, Forward Earnings, EPV)
