@@ -426,7 +426,7 @@ def run_daily_briefing_with_rate_limiting() -> str:
                 "STRATEGY DEFINITIONS:\n"
                 "- Strategy 1: ML Classifier (ml_nse_trading_predictions / ml_trading_predictions)\n"
                 "  → Buy/Sell signals with confidence %, signal strength\n"
-                "- Strategy 2: AI 3-day Price Predictions (ai_prediction_history with days_ahead=3)\n"
+                "- Strategy 2: AI 7-day Price Predictions (ai_prediction_history with days_ahead=7)\n"
                 "  → Predicted price → BULLISH if up, BEARISH if down\n"
                 "- ALIGNED: Both agree on direction (ML Buy + AI Bullish OR ML Sell + AI Bearish)\n\n"
                 "Provide a CONCISE summary (under 400 words) with TWO sections:\n\n"

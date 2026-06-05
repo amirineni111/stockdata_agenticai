@@ -14,7 +14,7 @@ REM call venv\Scripts\activate.bat
 REM Run the daily briefing
 for /f "delims=" %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss"') do set "RUN_TS=%%i"
 set "RUN_LOG=logs\run_%RUN_TS%.log"
-python main.py > "%RUN_LOG%" 2>&1
+py -3.12 main.py > "%RUN_LOG%" 2>&1
 
 REM Log the exit code
 echo Exit code: %ERRORLEVEL% >> logs\run_log.txt

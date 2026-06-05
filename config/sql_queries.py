@@ -960,11 +960,11 @@ CROSS_STRATEGY_QUERIES = {
                 ON ai.ticker = hist.ticker 
                 AND ai.prediction_date = hist.trading_date
             INNER JOIN (
-                SELECT MAX(prediction_date) AS max_date 
-                FROM ai_prediction_history 
-                WHERE days_ahead = 3
+                SELECT MAX(prediction_date) AS max_date
+                FROM ai_prediction_history
+                WHERE days_ahead = 7
             ) latest ON ai.prediction_date = latest.max_date
-            WHERE ai.days_ahead = 3
+            WHERE ai.days_ahead = 7
               AND ai.model_name = 'Ensemble'
         ),
         aligned AS (
@@ -1000,7 +1000,7 @@ CROSS_STRATEGY_QUERIES = {
             s2_target_price
         FROM aligned
         WHERE rn <= 10
-        ORDER BY 
+        ORDER BY
             CASE price_category
                 WHEN 'Cat1_Below20' THEN 1
                 WHEN 'Cat2_20to100' THEN 2
@@ -1009,7 +1009,7 @@ CROSS_STRATEGY_QUERIES = {
             END,
             ml_confidence_pct DESC
     """,
-    
+
     # ========================================================================
     # NASDAQ 100 Cross-Strategy (All 4 Price Categories in 1 Query)
     # ========================================================================
@@ -1054,11 +1054,11 @@ CROSS_STRATEGY_QUERIES = {
                 ON ai.ticker = hist.ticker 
                 AND ai.prediction_date = hist.trading_date
             INNER JOIN (
-                SELECT MAX(prediction_date) AS max_date 
-                FROM ai_prediction_history 
-                WHERE days_ahead = 3
+                SELECT MAX(prediction_date) AS max_date
+                FROM ai_prediction_history
+                WHERE days_ahead = 7
             ) latest ON ai.prediction_date = latest.max_date
-            WHERE ai.days_ahead = 3
+            WHERE ai.days_ahead = 7
               AND ai.model_name = 'Ensemble'
         ),
         aligned AS (
