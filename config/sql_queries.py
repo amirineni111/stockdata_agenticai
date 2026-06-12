@@ -179,10 +179,13 @@ ML_ANALYST_QUERIES = {
 
     # --- Strategy 1: ML Classifier Model Health (ml_trading_predictions) ---
 
+    # Note (June 2026): total_predictions = full ticker universe scanned
+    # (~2,300; suppressed rows are now stored with is_actionable=0).
+    # buy_signals/sell_signals/high_confidence_count remain actionable-only.
     "strategy1_nasdaq_ml_summary": """
         SELECT TOP 1
             s.run_date AS latest_date,
-            s.total_predictions,
+            s.total_predictions AS tickers_scanned,
             s.buy_signals,
             s.sell_signals,
             s.high_confidence_count,
@@ -506,6 +509,7 @@ STRATEGY_TRADE_QUERIES = {
             ROUND(CAST(close_price AS FLOAT), 2) AS close_price
         FROM ml_trading_predictions
         WHERE trading_date = (SELECT MAX(trading_date) FROM ml_trading_predictions)
+            AND ISNULL(is_actionable, 1) = 1
             AND signal_strength IN ('Strong', 'Moderate')
             AND confidence_percentage >= 60
             AND CAST(close_price AS FLOAT) > 15
@@ -1033,7 +1037,8 @@ CROSS_STRATEGY_QUERIES = {
             INNER JOIN (
                 SELECT MAX(trading_date) AS max_date FROM ml_trading_predictions
             ) latest ON ml.trading_date = latest.max_date
-            WHERE ml.signal_strength IN ('Strong', 'Moderate')
+            WHERE ISNULL(ml.is_actionable, 1) = 1
+              AND ml.signal_strength IN ('Strong', 'Moderate')
               AND ml.confidence_percentage >= 55
         ),
         s2_ai AS (

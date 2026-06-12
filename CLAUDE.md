@@ -248,7 +248,7 @@ When both strategies agree on direction → **ALIGNED** (highest conviction). Wh
 #### ML Predictions (populated by `sqlserver_copilot*` repos)
 | Table | ~Rows | Written By | Key Columns |
 |-------|-------|-----------|-------------|
-| `ml_trading_predictions` | 5,041 | `sqlserver_copilot` | ticker, trading_date, predicted_signal, confidence_percentage, signal_strength, RSI, buy/sell_probability |
+| `ml_trading_predictions` | ~2,300/day | `sqlserver_copilot` | ticker, trading_date, predicted_signal, confidence_percentage, signal_strength, RSI, buy/sell_probability, is_actionable, suppression_reason. Since June 2026 ALL tickers are stored daily; suppressed rows have `is_actionable=0`, `signal_strength='Suppressed'`. Filter `ISNULL(is_actionable,1)=1` for tradeable signals/accuracy |
 | `ml_nse_trading_predictions` | 28,647 | `sqlserver_copilot_nse` | Same + model_name, sector, market_cap_category, high_confidence |
 | `forex_ml_predictions` | 290 | `sqlserver_copilot_forex` | currency_pair, predicted_signal, signal_confidence, prob_buy/sell/hold, model_name, model_version |
 | `ai_prediction_history` | 45,135 | `streamlit-dashboard` | model_name (LR/GB/RF), predicted/actual_price, direction_correct, absolute/percentage_error |
