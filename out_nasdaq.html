@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASDAQ 100 ML Bucket Tracker</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial, Helvetica, sans-serif; font-size:13px; color:#333;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;">
+<tr>
+<td align="center" style="padding:18px 0;">
+
+<table width="680" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+
+    <!-- Header -->
+    <tr>
+        <td style="background-color:#a7b125; padding:20px 26px; text-align:center;">
+            <h1 style="color:#7a2929; margin:0; font-size:22px; font-weight:bold;">
+                NASDAQ 100 ML Bucket Tracker
+            </h1>
+            <p style="color:#6e30a8; margin:6px 0 0 0; font-size:13px;">
+                Closes through Friday, June 12, 2026
+            </p>
+        </td>
+    </tr>
+
+    <!-- Legend -->
+    <tr>
+        <td style="padding:14px 26px 0 26px;">
+            <p style="color:#7f8c8d; font-size:11px; margin:0; line-height:1.5;">
+                <strong>Matrix</strong> = goal-met / total &middot; hit-rate, per price bucket and prediction day
+                (top 5 by model confidence). <strong>Goal</strong>:
+                <span style="color:#27ae60; font-weight:bold;">✓</span> Buy that rose / Sell that fell vs the
+                prediction-day price by today's close; <span style="color:#e74c3c; font-weight:bold;">✗</span> not met.
+                Cell colour: <span style="color:#27ae60;">≥60%</span> /
+                <span style="color:#e67e22;">40–59%</span> / <span style="color:#e74c3c;">&lt;40%</span>.
+            </p>
+        </td>
+    </tr>
+
+    
+    <tr>
+        <td style="padding:18px 26px 4px 26px;">
+            <h2 style="color:#2c3e50; font-size:17px; margin:0 0 4px 0; padding-bottom:6px; border-bottom:2px solid #8e44ad;">
+                🔀 S1 ∧ S2 — Both Aligned
+            </h2>
+            <p style="color:#7f8c8d; font-size:11px; margin:0 0 8px 0;">ML classifier signal agrees with the AI ensemble direction (Buy+BULLISH or Sell+BEARISH). Highest conviction.</p>
+
+            <!-- Hit-rate matrix -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-bottom:6px;">
+                <tr style="background-color:#2c3e50;">
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50;">Bucket</td>
+                    
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50; text-align:center;">PrevDay (Jun 11)</td>
+                    
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50; text-align:center;">PrevDay-1 (Jun 10)</td>
+                    
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50; text-align:center;">PrevDay-2 (Jun 09)</td>
+                    
+                </tr>
+                
+                <tr >
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">$0–20</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#27ae60; font-weight:bold;">3/5 · 60%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#bbbbbb; font-weight:bold;">—</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#bbbbbb; font-weight:bold;">—</span>
+                    </td>
+                    
+                </tr>
+                
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">$20–100</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e67e22; font-weight:bold;">2/5 · 40%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">1/5 · 20%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e67e22; font-weight:bold;">2/5 · 40%</span>
+                    </td>
+                    
+                </tr>
+                
+                <tr >
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">$100–200</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#27ae60; font-weight:bold;">3/5 · 60%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e67e22; font-weight:bold;">2/4 · 50%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#27ae60; font-weight:bold;">1/1 · 100%</span>
+                    </td>
+                    
+                </tr>
+                
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">$200+</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">1/5 · 20%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">1/5 · 20%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#27ae60; font-weight:bold;">1/1 · 100%</span>
+                    </td>
+                    
+                </tr>
+                
+            </table>
+        </td>
+    </tr>
+
+        <!-- Compact detail: one table per prediction day -->
+        
+        <tr>
+            <td style="padding:6px 26px 2px 26px;">
+                <h3 style="color:#34495e; font-size:13px; margin:6px 0 3px 0;">
+                    PrevDay — made Jun 11 <span style="color:#95a5a6; font-weight:normal;">→ today Jun 12</span>
+                </h3>
+            </td>
+        </tr>
+            
+            <tr>
+                <td style="padding:2px 26px 8px 26px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr style="background-color:#eceff1;">
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Bucket</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Ticker</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Dir</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Price</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Today</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:center;">Goal</td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">Arko</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$8.64</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$8.63</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AMPG</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$8.67</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$8.49</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CRK</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$13.17</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$13.52</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ACGLN</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$16.32</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$16.36</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AFB</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$11.34</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$11.33</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CHEF</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$89.76</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$90.75</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CAKE</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$74.98</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$75.28</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">KNX</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$82.45</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$81.54</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">MAC</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$25.01</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$25.45</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">FUTU</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$95.53</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$97.54</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ATI</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$199.50</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$198.48</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CROX</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$125.87</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$124.71</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ARCB</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$172.67</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$173.04</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">PFG</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$109.69</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$111.11</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">QLYS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$110.83</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$111.24</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">HUM</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$368.69</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$379.22</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">RS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$410.43</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$413.43</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">IBM</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$274.85</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$272.24</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">PSA</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$324.71</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$325.94</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CRS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$562.45</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$561.49</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                    </table>
+                </td>
+            </tr>
+            
+        
+        <tr>
+            <td style="padding:6px 26px 2px 26px;">
+                <h3 style="color:#34495e; font-size:13px; margin:6px 0 3px 0;">
+                    PrevDay-1 — made Jun 10 <span style="color:#95a5a6; font-weight:normal;">→ today Jun 12</span>
+                </h3>
+            </td>
+        </tr>
+            
+            <tr>
+                <td style="padding:2px 26px 8px 26px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr style="background-color:#eceff1;">
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Bucket</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Ticker</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Dir</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Price</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Today</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:center;">Goal</td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ARTNA</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$33.06</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$32.77</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AVA</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$42.39</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$42.43</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">SNDR</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$37.06</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$38.44</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">USB</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$56.81</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$58.94</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">BAC</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$54.54</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$56.02</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">PSMT</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$174.74</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$182.30</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">NNI</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$130.72</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$130.30</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CNI</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$119.18</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$118.98</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">EXPD</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$164.71</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$166.62</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">FCNCA</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$2,112.87</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$2,108.61</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">PNC</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$232.64</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$237.66</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">WSM</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$206.94</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$223.54</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">LSTR</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$218.92</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$224.27</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AMAT</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$497.01</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$567.25</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                    </table>
+                </td>
+            </tr>
+            
+        
+        <tr>
+            <td style="padding:6px 26px 2px 26px;">
+                <h3 style="color:#34495e; font-size:13px; margin:6px 0 3px 0;">
+                    PrevDay-2 — made Jun 09 <span style="color:#95a5a6; font-weight:normal;">→ today Jun 12</span>
+                </h3>
+            </td>
+        </tr>
+            
+            <tr>
+                <td style="padding:2px 26px 8px 26px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr style="background-color:#eceff1;">
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Bucket</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Ticker</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Dir</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Price</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Today</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:center;">Goal</td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AD</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$50.79</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$40.76</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CBSH</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$53.88</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$55.82</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">VNO</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$38.45</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$38.27</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">GNTX</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$24.84</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$25.86</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">JEF</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$59.03</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$61.66</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">A</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$135.48</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$129.84</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">SNOW</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$239.66</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$232.78</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                    </table>
+                </td>
+            </tr>
+            
+        
+    
+    <tr>
+        <td style="padding:18px 26px 4px 26px;">
+            <h2 style="color:#2c3e50; font-size:17px; margin:0 0 4px 0; padding-bottom:6px; border-bottom:2px solid #2980b9;">
+                🤖 S1 Predictions Only
+            </h2>
+            <p style="color:#7f8c8d; font-size:11px; margin:0 0 8px 0;">ML classifier signals on their own, regardless of AI ensemble agreement.</p>
+
+            <!-- Hit-rate matrix -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-bottom:6px;">
+                <tr style="background-color:#2c3e50;">
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50;">Bucket</td>
+                    
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50; text-align:center;">PrevDay (Jun 11)</td>
+                    
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50; text-align:center;">PrevDay-1 (Jun 10)</td>
+                    
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50; text-align:center;">PrevDay-2 (Jun 09)</td>
+                    
+                </tr>
+                
+                <tr >
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">$0–20</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#27ae60; font-weight:bold;">3/3 · 100%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#27ae60; font-weight:bold;">3/5 · 60%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">1/5 · 20%</span>
+                    </td>
+                    
+                </tr>
+                
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">$20–100</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">0/5 · 0%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">1/5 · 20%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e67e22; font-weight:bold;">2/5 · 40%</span>
+                    </td>
+                    
+                </tr>
+                
+                <tr >
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">$100–200</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#27ae60; font-weight:bold;">5/5 · 100%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e67e22; font-weight:bold;">2/5 · 40%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">1/5 · 20%</span>
+                    </td>
+                    
+                </tr>
+                
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">$200+</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e67e22; font-weight:bold;">2/5 · 40%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#27ae60; font-weight:bold;">3/5 · 60%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">1/5 · 20%</span>
+                    </td>
+                    
+                </tr>
+                
+            </table>
+        </td>
+    </tr>
+
+        <!-- Compact detail: one table per prediction day -->
+        
+        <tr>
+            <td style="padding:6px 26px 2px 26px;">
+                <h3 style="color:#34495e; font-size:13px; margin:6px 0 3px 0;">
+                    PrevDay — made Jun 11 <span style="color:#95a5a6; font-weight:normal;">→ today Jun 12</span>
+                </h3>
+            </td>
+        </tr>
+            
+            <tr>
+                <td style="padding:2px 26px 8px 26px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr style="background-color:#eceff1;">
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Bucket</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Ticker</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Dir</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Price</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Today</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:center;">Goal</td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AMRX</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$16.34</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$16.20</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ALF</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$10.80</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$10.78</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">APXTU</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$10.25</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">—</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#7f8c8d; font-weight:bold;">—</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">Arko</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$8.64</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$8.63</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ARCIU</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$10.15</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">—</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#7f8c8d; font-weight:bold;">—</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CHEF</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$89.76</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$90.75</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AGNCM</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$25.05</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$25.12</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AGNCP</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$25.24</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$25.24</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ASRT</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$23.47</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$23.48</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">TGTX</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$48.05</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$49.52</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ATI</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$199.50</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$198.48</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CROX</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$125.87</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$124.71</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AWK</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$124.45</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$126.31</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">PNW</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$102.40</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$103.44</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AEP</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$128.48</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$129.23</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">MTRN</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$246.00</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$247.26</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">TRGP</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$269.37</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$272.60</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">MPC</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$260.81</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$263.58</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">HUM</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$368.69</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$379.22</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">RS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$410.43</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$413.43</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                    </table>
+                </td>
+            </tr>
+            
+        
+        <tr>
+            <td style="padding:6px 26px 2px 26px;">
+                <h3 style="color:#34495e; font-size:13px; margin:6px 0 3px 0;">
+                    PrevDay-1 — made Jun 10 <span style="color:#95a5a6; font-weight:normal;">→ today Jun 12</span>
+                </h3>
+            </td>
+        </tr>
+            
+            <tr>
+                <td style="padding:2px 26px 8px 26px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr style="background-color:#eceff1;">
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Bucket</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Ticker</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Dir</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Price</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Today</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:center;">Goal</td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ERIC</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$11.60</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$12.28</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ONDS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$9.31</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$9.33</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ABSI</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$6.38</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$6.80</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AGCC</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$15.04</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$14.40</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ANRO</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$19.68</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$21.47</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CWAN</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$24.33</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$24.33</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ALMU</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$22.30</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$25.20</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ZM</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$93.96</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$93.68</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ACIW</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$43.73</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$45.24</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ADC</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$75.53</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$75.83</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">LOGI</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$109.13</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$110.81</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">NXT</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$111.95</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$121.88</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AEE</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$108.77</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$109.00</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AIR</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$117.36</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$129.01</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ETR</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$110.48</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$111.11</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AVGO</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$372.10</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$382.07</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">NVDA</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$200.42</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$205.19</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">WDFC</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$222.48</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$223.01</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">BURL</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$327.01</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$338.45</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CAH</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$216.30</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$223.85</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                    </table>
+                </td>
+            </tr>
+            
+        
+        <tr>
+            <td style="padding:6px 26px 2px 26px;">
+                <h3 style="color:#34495e; font-size:13px; margin:6px 0 3px 0;">
+                    PrevDay-2 — made Jun 09 <span style="color:#95a5a6; font-weight:normal;">→ today Jun 12</span>
+                </h3>
+            </td>
+        </tr>
+            
+            <tr>
+                <td style="padding:2px 26px 8px 26px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr style="background-color:#eceff1;">
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Bucket</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Ticker</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Dir</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Price</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Today</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:center;">Goal</td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AIRG</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$6.84</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$6.90</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ALF</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$10.86</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$10.78</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ALOY</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$12.53</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$15.22</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ASYS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$19.07</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$23.99</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">BPYPN</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$13.64</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$13.95</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CWAN</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$24.35</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$24.33</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AA</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$72.41</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$68.77</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ACMR</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$81.33</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$93.95</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AD</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$50.79</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$40.76</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AGNCM</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$25.10</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$25.12</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">A</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$135.48</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$129.84</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AAOI</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$162.88</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$169.05</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AMR</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$193.58</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$200.82</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CF</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$108.58</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$109.48</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CRUS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$164.07</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$164.09</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">BELFA</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$245.49</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$261.32</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">COHR</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$355.94</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$385.03</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CRWD</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$644.93</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$682.80</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">DDOG</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$227.34</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$229.90</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">$200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">EXP</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$217.38</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">$215.25</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                    </table>
+                </td>
+            </tr>
+            
+        
+    
+
+    <!-- Footer -->
+    <tr>
+        <td style="background-color:#ecf0f1; padding:16px 26px; text-align:center; border-top:1px solid #ddd;">
+            <p style="color:#7f8c8d; margin:0; font-size:11px;">
+                NASDAQ 100 ML Bucket Tracker | Generated 2026-06-13 08:33
+            </p>
+            <p style="color:#95a5a6; margin:6px 0 0 0; font-size:10px;">
+                Automated report. ML predictions are not financial advice. Do your own due diligence.
+            </p>
+        </td>
+    </tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSE 500 ML Bucket Tracker</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial, Helvetica, sans-serif; font-size:13px; color:#333;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;">
+<tr>
+<td align="center" style="padding:18px 0;">
+
+<table width="680" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+
+    <!-- Header -->
+    <tr>
+        <td style="background-color:#a7b125; padding:20px 26px; text-align:center;">
+            <h1 style="color:#7a2929; margin:0; font-size:22px; font-weight:bold;">
+                NSE 500 ML Bucket Tracker
+            </h1>
+            <p style="color:#6e30a8; margin:6px 0 0 0; font-size:13px;">
+                Closes through Friday, June 12, 2026
+            </p>
+        </td>
+    </tr>
+
+    <!-- Legend -->
+    <tr>
+        <td style="padding:14px 26px 0 26px;">
+            <p style="color:#7f8c8d; font-size:11px; margin:0; line-height:1.5;">
+                <strong>Matrix</strong> = goal-met / total &middot; hit-rate, per price bucket and prediction day
+                (top 5 by model confidence). <strong>Goal</strong>:
+                <span style="color:#27ae60; font-weight:bold;">✓</span> Buy that rose / Sell that fell vs the
+                prediction-day price by today's close; <span style="color:#e74c3c; font-weight:bold;">✗</span> not met.
+                Cell colour: <span style="color:#27ae60;">≥60%</span> /
+                <span style="color:#e67e22;">40–59%</span> / <span style="color:#e74c3c;">&lt;40%</span>.
+            </p>
+        </td>
+    </tr>
+
+    
+    <tr>
+        <td style="padding:18px 26px 4px 26px;">
+            <h2 style="color:#2c3e50; font-size:17px; margin:0 0 4px 0; padding-bottom:6px; border-bottom:2px solid #8e44ad;">
+                🔀 S1 ∧ S2 — Both Aligned
+            </h2>
+            <p style="color:#7f8c8d; font-size:11px; margin:0 0 8px 0;">ML classifier signal agrees with the AI ensemble direction (Buy+BULLISH or Sell+BEARISH). Highest conviction.</p>
+
+            <!-- Hit-rate matrix -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-bottom:6px;">
+                <tr style="background-color:#2c3e50;">
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50;">Bucket</td>
+                    
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50; text-align:center;">PrevDay (Jun 11)</td>
+                    
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50; text-align:center;">PrevDay-1 (Jun 10)</td>
+                    
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50; text-align:center;">PrevDay-2 (Jun 09)</td>
+                    
+                </tr>
+                
+                <tr >
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">₹0–20</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">0/1 · 0%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#27ae60; font-weight:bold;">2/3 · 67%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#27ae60; font-weight:bold;">4/5 · 80%</span>
+                    </td>
+                    
+                </tr>
+                
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">₹20–100</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">1/5 · 20%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">1/5 · 20%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#27ae60; font-weight:bold;">3/5 · 60%</span>
+                    </td>
+                    
+                </tr>
+                
+                <tr >
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">₹100–200</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#27ae60; font-weight:bold;">4/5 · 80%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">1/5 · 20%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#27ae60; font-weight:bold;">3/5 · 60%</span>
+                    </td>
+                    
+                </tr>
+                
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">₹200+</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e67e22; font-weight:bold;">2/5 · 40%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e67e22; font-weight:bold;">2/5 · 40%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#27ae60; font-weight:bold;">3/5 · 60%</span>
+                    </td>
+                    
+                </tr>
+                
+            </table>
+        </td>
+    </tr>
+
+        <!-- Compact detail: one table per prediction day -->
+        
+        <tr>
+            <td style="padding:6px 26px 2px 26px;">
+                <h3 style="color:#34495e; font-size:13px; margin:6px 0 3px 0;">
+                    PrevDay — made Jun 11 <span style="color:#95a5a6; font-weight:normal;">→ today Jun 12</span>
+                </h3>
+            </td>
+        </tr>
+            
+            <tr>
+                <td style="padding:2px 26px 8px 26px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr style="background-color:#eceff1;">
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Bucket</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Ticker</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Dir</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Price</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Today</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:center;">Goal</td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">IDEA.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.17</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.90</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ONELIFECAP.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹25.21</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹26.09</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">BANKA.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹92.42</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹90.60</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">MOTOGENFIN.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹29.25</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹29.30</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">PAISALO.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹58.51</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹59.30</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">SOUTHBANK.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹45.32</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹46.66</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">DJML.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹108.32</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹113.47</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AARON.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹114.75</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹119.24</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">APCL.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹104.56</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹108.33</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">BCONCEPTS.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹178.05</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹178.37</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CHEMPLASTS.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹196.51</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹202.94</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">MANCREDIT.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹214.85</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹222.07</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">BLSE.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹225.19</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹228.40</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AIIL.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹459.95</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹530.15</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AJAXENGG.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹548.35</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹548.30</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">APOLLO.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹381.75</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹409.40</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                    </table>
+                </td>
+            </tr>
+            
+        
+        <tr>
+            <td style="padding:6px 26px 2px 26px;">
+                <h3 style="color:#34495e; font-size:13px; margin:6px 0 3px 0;">
+                    PrevDay-1 — made Jun 10 <span style="color:#95a5a6; font-weight:normal;">→ today Jun 12</span>
+                </h3>
+            </td>
+        </tr>
+            
+            <tr>
+                <td style="padding:2px 26px 8px 26px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr style="background-color:#eceff1;">
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Bucket</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Ticker</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Dir</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Price</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Today</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:center;">Goal</td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">IDEA.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹13.88</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.90</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">NILASPACES.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹11.90</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹12.07</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">PENINLAND.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.88</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.92</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">SURANASOL.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹27.03</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹27.44</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ISFT.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹85.73</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹84.77</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">DIGISPICE.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹20.34</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹20.38</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">KAMDHENU.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹27.22</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹29.29</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">KOKUYOCMLN.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹83.87</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹84.51</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">DJML.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹109.32</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹113.47</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">VINCOFE.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹156.22</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹159.45</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">NBCC.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹103.00</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹105.16</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">VMM.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹118.84</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹119.77</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AURUM.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹183.48</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹183.39</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AKUMS.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹592.10</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹622.90</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CAPLIPOINT.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹2,309.40</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹2,407.80</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">SAKAR.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹839.00</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹824.10</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">DRREDDY.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹1,271.70</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹1,275.40</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">HCG.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹636.00</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹630.50</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                    </table>
+                </td>
+            </tr>
+            
+        
+        <tr>
+            <td style="padding:6px 26px 2px 26px;">
+                <h3 style="color:#34495e; font-size:13px; margin:6px 0 3px 0;">
+                    PrevDay-2 — made Jun 09 <span style="color:#95a5a6; font-weight:normal;">→ today Jun 12</span>
+                </h3>
+            </td>
+        </tr>
+            
+            <tr>
+                <td style="padding:2px 26px 8px 26px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr style="background-color:#eceff1;">
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Bucket</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Ticker</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Dir</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Price</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Today</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:center;">Goal</td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">IDEA.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.14</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.90</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">COMPUSOFT.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹13.91</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹13.70</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">MGEL.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹16.48</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹16.44</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ABINFRA.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹10.13</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹10.82</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">KELLTONTEC.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#27ae60; font-weight:bold;">Buy</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹15.20</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹15.25</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">PAISALO.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹60.18</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹59.30</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CENTRALBK.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹31.08</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹31.04</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">SOUTHBANK.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹45.74</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹46.66</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">EQUITASBNK.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹74.98</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹75.54</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">FOCUS.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹93.28</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹91.81</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">SAMMAANCAP.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹180.65</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹174.42</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">DJML.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹107.25</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹113.47</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">NBCC.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹105.83</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹105.16</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">VINCOFE.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹152.79</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹159.45</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AURUM.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹185.92</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹183.39</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">PANACEABIO.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹607.75</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹536.00</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">BHAGERIA.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹216.40</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹209.25</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AKUMS.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹548.25</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹622.90</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">PAGEIND.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹38,905.00</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹38,625.00</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">BSE.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹3,996.30</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹4,041.10</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                    </table>
+                </td>
+            </tr>
+            
+        
+    
+    <tr>
+        <td style="padding:18px 26px 4px 26px;">
+            <h2 style="color:#2c3e50; font-size:17px; margin:0 0 4px 0; padding-bottom:6px; border-bottom:2px solid #2980b9;">
+                🤖 S1 Predictions Only
+            </h2>
+            <p style="color:#7f8c8d; font-size:11px; margin:0 0 8px 0;">ML classifier signals on their own, regardless of AI ensemble agreement.</p>
+
+            <!-- Hit-rate matrix -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-bottom:6px;">
+                <tr style="background-color:#2c3e50;">
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50;">Bucket</td>
+                    
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50; text-align:center;">PrevDay (Jun 11)</td>
+                    
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50; text-align:center;">PrevDay-1 (Jun 10)</td>
+                    
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50; text-align:center;">PrevDay-2 (Jun 09)</td>
+                    
+                </tr>
+                
+                <tr >
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">₹0–20</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e67e22; font-weight:bold;">2/5 · 40%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e67e22; font-weight:bold;">2/5 · 40%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e67e22; font-weight:bold;">2/5 · 40%</span>
+                    </td>
+                    
+                </tr>
+                
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">₹20–100</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">1/5 · 20%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#27ae60; font-weight:bold;">3/5 · 60%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">1/5 · 20%</span>
+                    </td>
+                    
+                </tr>
+                
+                <tr >
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">₹100–200</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">0/5 · 0%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">0/5 · 0%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">1/5 · 20%</span>
+                    </td>
+                    
+                </tr>
+                
+                <tr style="background-color:#f8f9fa;">
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">₹200+</td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">1/5 · 20%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e74c3c; font-weight:bold;">1/5 · 20%</span>
+                    </td>
+                    
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:#e67e22; font-weight:bold;">2/5 · 40%</span>
+                    </td>
+                    
+                </tr>
+                
+            </table>
+        </td>
+    </tr>
+
+        <!-- Compact detail: one table per prediction day -->
+        
+        <tr>
+            <td style="padding:6px 26px 2px 26px;">
+                <h3 style="color:#34495e; font-size:13px; margin:6px 0 3px 0;">
+                    PrevDay — made Jun 11 <span style="color:#95a5a6; font-weight:normal;">→ today Jun 12</span>
+                </h3>
+            </td>
+        </tr>
+            
+            <tr>
+                <td style="padding:2px 26px 8px 26px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr style="background-color:#eceff1;">
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Bucket</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Ticker</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Dir</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Price</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Today</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:center;">Goal</td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">MOKSH.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹12.14</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹12.02</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">RMDRIP.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹17.69</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹18.57</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">SETCO.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹18.26</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹18.62</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">RPPL.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹17.79</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹18.05</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">SHEKHAWATI.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.52</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.43</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">GICL.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹22.06</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹22.22</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">GRMOVER.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹87.60</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹93.23</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">LEMERITE.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹24.92</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹26.07</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">IL&amp;FSENGG.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹29.04</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹28.92</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">SBC.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹36.97</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹37.18</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AARVI.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹142.31</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹148.29</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ABCOTS.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹198.38</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹210.18</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AHLEAST.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹152.96</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹153.38</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AMANTA.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹148.62</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹151.82</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ARKADE.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹111.22</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹114.30</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AFSL.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹201.01</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹201.01</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AGARWALEYE.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹439.40</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹439.75</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">APOLLOPIPE.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹478.65</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹495.00</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AVADHSUGAR.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹454.55</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹452.20</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">BUTTERFLY.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹625.65</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹627.10</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                    </table>
+                </td>
+            </tr>
+            
+        
+        <tr>
+            <td style="padding:6px 26px 2px 26px;">
+                <h3 style="color:#34495e; font-size:13px; margin:6px 0 3px 0;">
+                    PrevDay-1 — made Jun 10 <span style="color:#95a5a6; font-weight:normal;">→ today Jun 12</span>
+                </h3>
+            </td>
+        </tr>
+            
+            <tr>
+                <td style="padding:2px 26px 8px 26px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr style="background-color:#eceff1;">
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Bucket</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Ticker</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Dir</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Price</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Today</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:center;">Goal</td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AHCL.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.42</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹15.06</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AEPL.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹16.38</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹16.00</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">MANUGRAPH.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹16.71</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹15.42</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">SURANAT&amp;P.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹18.07</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹18.25</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">SYNCOMF.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.12</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.27</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AAREYDRUGS.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹78.22</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹77.85</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ANUHPHR.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹75.87</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹79.59</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">BIOFILCHEM.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹36.39</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹36.25</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">MANGALAM.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹28.30</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹28.18</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">SAGILITY.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹40.14</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹40.47</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AMANTA.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹140.92</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹151.82</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ZIMLAB.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹111.66</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹114.39</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">GKSL.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹124.27</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹130.08</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">DCAL.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹181.41</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹184.64</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">INDSWFTLAB.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹162.86</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹163.03</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">NEULANDLAB.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹16,946.00</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹17,198.00</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AKUMS.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹592.10</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹622.90</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">GUFICBIO.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹364.05</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹371.25</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">PARKHOSPS.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹280.10</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹274.60</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">RUBICON.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹1,188.10</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹1,295.50</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                    </table>
+                </td>
+            </tr>
+            
+        
+        <tr>
+            <td style="padding:6px 26px 2px 26px;">
+                <h3 style="color:#34495e; font-size:13px; margin:6px 0 3px 0;">
+                    PrevDay-2 — made Jun 09 <span style="color:#95a5a6; font-weight:normal;">→ today Jun 12</span>
+                </h3>
+            </td>
+        </tr>
+            
+            <tr>
+                <td style="padding:2px 26px 8px 26px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr style="background-color:#eceff1;">
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Bucket</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Ticker</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Dir</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Price</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Today</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:center;">Goal</td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AHCL.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹15.14</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹15.06</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AFIL.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹10.01</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹10.13</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">BAIDFIN.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹10.17</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹9.88</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">IDEA.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.14</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.90</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹0–20</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">LAXMICOT.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.27</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹14.35</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">GTECJAINX.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹36.44</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹31.25</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">TCIFINANCE.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹20.91</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹26.56</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">DIGJAMLMTD.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹44.98</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹45.89</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">FINKURVE.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹62.33</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹63.62</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹20–100</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">KWIL.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹32.81</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹36.90</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">AMANTA.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹135.46</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹151.82</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">PWL.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹106.26</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹106.79</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">CANHLIFE.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹140.33</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹138.68</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">ZIMLAB.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹113.05</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹114.39</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹100–200</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">GROWW.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹195.25</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹198.97</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">PANACEABIO.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹607.75</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹536.00</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">NEULANDLAB.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹17,188.00</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹17,198.00</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">BHAGERIA.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹216.40</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹209.25</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#27ae60; font-weight:bold;">✓</span></td>
+                        </tr>
+                        
+                        <tr >
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">JNKINDIA.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹484.05</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹504.05</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                        <tr style="background-color:#f8f9fa;">
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; color:#7f8c8d;">₹200+</td>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">PATELRMART.NS</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:#e74c3c; font-weight:bold;">Sell</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹210.11</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">₹217.43</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:#e74c3c; font-weight:bold;">✗</span></td>
+                        </tr>
+                        
+                    </table>
+                </td>
+            </tr>
+            
+        
+    
+
+    <!-- Footer -->
+    <tr>
+        <td style="background-color:#ecf0f1; padding:16px 26px; text-align:center; border-top:1px solid #ddd;">
+            <p style="color:#7f8c8d; margin:0; font-size:11px;">
+                NSE 500 ML Bucket Tracker | Generated 2026-06-13 08:33
+            </p>
+            <p style="color:#95a5a6; margin:6px 0 0 0; font-size:10px;">
+                Automated report. ML predictions are not financial advice. Do your own due diligence.
+            </p>
+        </td>
+    </tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>
