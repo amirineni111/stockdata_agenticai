@@ -4,7 +4,7 @@
 Agentic AI layer of a 7-repo stock trading platform. 7 CrewAI agents query SQL Server and produce a daily HTML email via Claude LLM.
 
 ## Stack
-- Python 3.11+, CrewAI ≥0.108.0, Anthropic Claude (claude-sonnet-4-20250514)
+- Python 3.11+, CrewAI ≥0.108.0, Anthropic Claude (claude-sonnet-4-6)
 - SQL Server (localhost\MSSQLSERVER01, stockdata_db, Windows Auth, pyodbc)
 - Jinja2 HTML templates, Office 365 SMTP, Flask (A2A servers)
 

@@ -300,7 +300,7 @@ All loaded from `.env` via `python-dotenv` in `config/settings.py`:
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `ANTHROPIC_API_KEY` | — | Claude API key |
-| `LLM_MODEL` | `claude-sonnet-4-20250514` | Model identifier |
+| `LLM_MODEL` | `claude-sonnet-4-6` | Model identifier |
 | `SQL_SERVER` | `192.168.86.55\MSSQLSERVER01` | SQL Server host (Machine A LAN IP) |
 | `SQL_DATABASE` | `stockdata_db` | Database name |
 | `SQL_DRIVER` | `{ODBC Driver 17 for SQL Server}` | ODBC driver |
