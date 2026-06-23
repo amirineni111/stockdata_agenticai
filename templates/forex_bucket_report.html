@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ market_name }} ML Bucket Tracker</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial, Helvetica, sans-serif; font-size:13px; color:#333;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;">
+<tr>
+<td align="center" style="padding:18px 0;">
+
+<table width="680" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+
+    <!-- Header -->
+    <tr>
+        <td style="background-color:#a7b125; padding:20px 26px; text-align:center;">
+            <h1 style="color:#7a2929; margin:0; font-size:22px; font-weight:bold;">
+                {{ market_name }} ML Bucket Tracker
+            </h1>
+            <p style="color:#6e30a8; margin:6px 0 0 0; font-size:13px;">
+                Closes through {{ report_date }}
+            </p>
+        </td>
+    </tr>
+
+    <!-- Legend -->
+    <tr>
+        <td style="padding:14px 26px 0 26px;">
+            <p style="color:#7f8c8d; font-size:11px; margin:0; line-height:1.5;">
+                <strong>Matrix</strong> = goal-met / total &middot; hit-rate, per signal direction
+                (Buy / Sell) and prediction day. <strong>Goal</strong>:
+                <span style="color:#27ae60; font-weight:bold;">✓</span> Buy that rose / Sell that fell vs the
+                prediction-day close by today's close; <span style="color:#e74c3c; font-weight:bold;">✗</span> not met.
+                HOLD signals are excluded. Cell colour:
+                <span style="color:#27ae60;">≥60%</span> /
+                <span style="color:#e67e22;">40–59%</span> / <span style="color:#e74c3c;">&lt;40%</span>.
+            </p>
+        </td>
+    </tr>
+
+    {% for section in sections %}
+    <tr>
+        <td style="padding:18px 26px 4px 26px;">
+            <h2 style="color:#2c3e50; font-size:17px; margin:0 0 4px 0; padding-bottom:6px; border-bottom:2px solid #2980b9;">
+                🤖 {{ section.title }}
+            </h2>
+            <p style="color:#7f8c8d; font-size:11px; margin:0 0 8px 0;">{{ section.subtitle }}</p>
+
+            <!-- Hit-rate matrix -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-bottom:6px;">
+                <tr style="background-color:#2c3e50;">
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50;">Direction</td>
+                    {% for h in section.col_headers %}
+                    <td style="padding:6px 10px; font-size:11px; font-weight:bold; color:#fff; border:1px solid #2c3e50; text-align:center;">{{ h }}</td>
+                    {% endfor %}
+                </tr>
+                {% for mrow in section.matrix %}
+                <tr {% if loop.index is even %}style="background-color:#f8f9fa;"{% endif %}>
+                    <td style="padding:5px 10px; font-size:12px; font-weight:bold; border:1px solid #dee2e6;">{{ mrow.bucket }}</td>
+                    {% for cell in mrow.cells %}
+                    <td style="padding:5px 10px; font-size:12px; border:1px solid #dee2e6; text-align:center;">
+                        <span style="color:{{ cell.color }}; font-weight:bold;">{{ cell.text }}</span>
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+        </td>
+    </tr>
+
+        <!-- Compact detail: one table per prediction day -->
+        {% for dt in section.day_tables %}
+        <tr>
+            <td style="padding:6px 26px 2px 26px;">
+                <h3 style="color:#34495e; font-size:13px; margin:6px 0 3px 0;">
+                    {{ dt.label }} — made {{ dt.pred_date_str }} <span style="color:#95a5a6; font-weight:normal;">→ today {{ section.today_str }}</span>
+                </h3>
+            </td>
+        </tr>
+            {% if not dt.rows %}
+            <tr><td style="padding:0 26px 6px 26px;"><p style="color:#95a5a6; font-size:11px; margin:0; font-style:italic;">No predictions.</p></td></tr>
+            {% else %}
+            <tr>
+                <td style="padding:2px 26px 8px 26px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr style="background-color:#eceff1;">
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Pair</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6;">Dir</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Price</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:right;">Today</td>
+                            <td style="padding:4px 8px; font-size:10px; font-weight:bold; border:1px solid #dee2e6; text-align:center;">Goal</td>
+                        </tr>
+                        {% for row in dt.rows %}
+                        <tr {% if loop.index is even %}style="background-color:#f8f9fa;"{% endif %}>
+                            <td style="padding:3px 8px; font-size:12px; border:1px solid #dee2e6; font-weight:bold;">{{ row.ticker }}</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6;"><span style="color:{{ row.dir_color }}; font-weight:bold;">{{ row.direction }}</span></td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">{{ row.price }}</td>
+                            <td style="padding:3px 8px; font-size:11px; border:1px solid #dee2e6; text-align:right;">{{ row.today }}</td>
+                            <td style="padding:3px 8px; font-size:13px; border:1px solid #dee2e6; text-align:center;"><span style="color:{{ row.goal_color }}; font-weight:bold;">{{ row.goal }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+
+    <!-- Footer -->
+    <tr>
+        <td style="background-color:#ecf0f1; padding:16px 26px; text-align:center; border-top:1px solid #ddd;">
+            <p style="color:#7f8c8d; margin:0; font-size:11px;">
+                {{ market_name }} ML Bucket Tracker | Generated {{ generated_at }}
+            </p>
+            <p style="color:#95a5a6; margin:6px 0 0 0; font-size:10px;">
+                Automated report. ML predictions are not financial advice. Do your own due diligence.
+            </p>
+        </td>
+    </tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>
