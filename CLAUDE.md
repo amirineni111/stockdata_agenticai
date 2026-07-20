@@ -96,6 +96,18 @@ stockdata_agenticai/
 └── logs/run_log.txt                # Execution log (exit codes + timestamps)
 ```
 
+### Standalone Reports (outside CrewAI — SQL Server + SMTP only, no Claude API)
+
+| Script | Purpose | Bat Runner(s) |
+|--------|---------|----------------|
+| `ml_bucket_report.py` | Daily HTML email: S1/S1∧S2 ML prediction hit-rates by price bucket, last 3 pred days | `run_nasdaq_bucket_report.bat`, `run_nse_bucket_report.bat` |
+| `ml_tomorrow_report.py` | Daily HTML email: forward-looking S1/S1∧S2 signals by price bucket | `run_nasdaq_tomorrow_report.bat`, `run_nse_tomorrow_report.bat` |
+| `forex_bucket_report.py` | Forex equivalent of `ml_bucket_report.py` | `run_forex_bucket_report.bat` |
+| `forex_tomorrow_report.py` | Forex equivalent of `ml_tomorrow_report.py` | `run_forex_tomorrow_report.bat` |
+| `weekly_screening_report.py` | Weekly Excel-attachment email: latest snapshot + week-over-week Top 10 score gain/loss for 7 fundamental screening views (growth, GARP, value, quality, fundamental scoring, fair value, dividend), one market per run — 14 `.xlsx` attachments, deleted from `exports/` after a successful send | `run_nasdaq_screening_report.bat`, `run_nse_screening_report.bat`, optional `setup_screening_report_scheduler.bat` |
+
+All five scripts use their own recipient env var(s) (see §7) rather than the daily-briefing `EMAIL_TO`/`email_recipients` table, and support `--dry-run` (writes local output instead of emailing).
+
 ---
 
 ## 3. AGENT REGISTRY
@@ -288,7 +300,7 @@ When both strategies agree on direction → **ALIGNED** (highest conviction). Wh
 - **Per-market indicator views** (NSE/NASDAQ/Forex): `{market}_RSI_calculation`, `{market}_macd`, `{market}_bollingerband`, `{market}_ema_sma_view`, `{market}_atr`, `{market}_stochastic`, `{market}_fibonacci`, `{market}_support_resistance`, `{market}_patterns`
 - **Signal views**: `{market}_rsi_signals`, `{market}_macd_signals`, `{market}_bb_signals`, `{market}_sma_signals`, `{market}_atr_spikes`
 - **Crossover views**: `vw_crossover_signals_NSE_500`, `vw_crossover_signals_NASDAQ_100`, `vw_crossover_signals_Forex`
-- **Fundamental screening**: `vw_value_stocks_screen`, `vw_quality_stocks_screen`, `vw_growth_stocks_screen`, `vw_dividend_stocks_screen`, `vw_fundamental_scoring`
+- **Fundamental screening**: `vw_value_stocks_screen`, `vw_quality_stocks_screen`, `vw_growth_stocks_screen`, `vw_garp_stocks_screen`, `vw_dividend_stocks_screen`, `vw_fundamental_scoring` — all carry `ticker`, `company_name`, `fetch_date` (weekly cadence) and a view-specific score column; `vw_fundamental_scoring` and `vw_dividend_stocks_screen` have no `market` column (derive via ticker suffix: `.NS`/`.BO` = NSE, else NASDAQ — see `weekly_screening_report.py`)
 - **Performance views**: `vw_signal_performance_summary`, `vw_model_performance_summary`, `vw_recent_prediction_accuracy`
 
 ---
@@ -317,6 +329,9 @@ All loaded from `.env` via `python-dotenv` in `config/settings.py`:
 | `AGENT_MAX_ITER` | `5` | Max agent iterations |
 | `AGENT_VERBOSE` | `true` | Verbose logging |
 | `AGENT_MAX_RPM` | `4` | Max LLM requests/minute |
+| `BUCKET_REPORT_EMAIL_TO` | `sree.amiri@gmail.com` | Recipients (comma-sep) for `ml_bucket_report.py`, `ml_tomorrow_report.py`, `forex_bucket_report.py`, `forex_tomorrow_report.py` — shared across all four |
+| `SCREENING_REPORT_EMAIL_TO_NASDAQ` | — | Recipients (comma-sep) for the NASDAQ `weekly_screening_report.py` run |
+| `SCREENING_REPORT_EMAIL_TO_NSE` | — | Recipients (comma-sep) for the NSE `weekly_screening_report.py` run |
 
 ---
 

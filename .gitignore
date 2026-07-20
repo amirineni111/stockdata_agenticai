@@ -21,6 +21,10 @@ venv/
 logs/
 *.log
 
+# Generated report attachments (weekly_screening_report.py) - deleted after
+# each successful send; left behind only on failure or --dry-run.
+exports/
+
 # OS
 .DS_Store
 Thumbs.db
