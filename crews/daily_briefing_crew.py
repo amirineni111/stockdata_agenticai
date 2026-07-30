@@ -45,7 +45,7 @@ from tools.run_tracker import (
     _new_agent_record,
     save_run_record,
 )
-from tools.preflight import run_preflight_checks
+from tools.preflight import run_preflight_checks, check_anthropic_live
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -210,28 +210,8 @@ def _markdown_to_html(text: str) -> str:
     return "\n".join(html_lines)
 
 
-def _compile_and_send_email(agent_results: dict, today: str) -> str:
-    """Compile agent results into HTML email using Jinja2 and send via SMTP."""
-
-    # Load the Jinja2 template
-    template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
-    env = Environment(loader=FileSystemLoader(template_dir))
-    template = env.get_template("briefing_email.html")
-
-    # Render the template with agent results
-    html_content = template.render(
-        report_date=today,
-        market_overview=_markdown_to_html(agent_results.get("market_intel", "No data available.")),
-        ml_model_health=_markdown_to_html(agent_results.get("ml_analysis", "No data available.")),
-        trade_opportunities=_markdown_to_html(agent_results.get("strategy", "No data available.")),
-        tech_signals=_markdown_to_html(agent_results.get("tech_signals", "No data available.")),
-        forex_outlook=_markdown_to_html(agent_results.get("forex", "No data available.")),
-        risk_warnings=_markdown_to_html(agent_results.get("risk", "No data available.")),
-        cross_strategy=_markdown_to_html(agent_results.get("cross_strategy", "No data available.")),
-    )
-
-    # Send the email
-    subject = f"Daily Trading Briefing - {today}"
+def _send_html_email(html_content: str, subject: str) -> str:
+    """Send a pre-rendered HTML email via SMTP to the daily-briefing recipients."""
     try:
         # Get recipients grouped by type (TO/CC/BCC)
         by_type = get_email_recipients_by_type("daily_briefing")
@@ -263,6 +243,91 @@ def _compile_and_send_email(agent_results: dict, today: str) -> str:
 
     except Exception as e:
         return f"Error sending email: {str(e)}"
+
+
+def _load_template():
+    """Load the shared Jinja2 briefing template."""
+    template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
+    env = Environment(loader=FileSystemLoader(template_dir))
+    return env.get_template("briefing_email.html")
+
+
+def _compile_and_send_email(agent_results: dict, today: str) -> str:
+    """Compile agent results into HTML email using Jinja2 and send via SMTP."""
+
+    template = _load_template()
+
+    # Render the template with agent results
+    html_content = template.render(
+        report_date=today,
+        mode_notice="",
+        market_overview=_markdown_to_html(agent_results.get("market_intel", "No data available.")),
+        ml_model_health=_markdown_to_html(agent_results.get("ml_analysis", "No data available.")),
+        trade_opportunities=_markdown_to_html(agent_results.get("strategy", "No data available.")),
+        tech_signals=_markdown_to_html(agent_results.get("tech_signals", "No data available.")),
+        forex_outlook=_markdown_to_html(agent_results.get("forex", "No data available.")),
+        risk_warnings=_markdown_to_html(agent_results.get("risk", "No data available.")),
+        cross_strategy=_markdown_to_html(agent_results.get("cross_strategy", "No data available.")),
+    )
+
+    subject = f"Daily Trading Briefing - {today}"
+    return _send_html_email(html_content, subject)
+
+
+def _compile_and_send_data_only_email(today: str, reason: str, dry_run: bool = False) -> str:
+    """Compile a NO-LLM raw-data briefing and send it.
+
+    Used when the Anthropic API is unavailable (credit/token limit, auth,
+    outage). Runs the same predefined SQL queries the agents would run and
+    renders the results as HTML tables — no Claude analysis.
+
+    When dry_run is True the rendered HTML is written to logs/ instead of
+    being emailed.
+    """
+    from tools.fallback_report import build_data_only_sections
+
+    sections = build_data_only_sections()
+
+    banner = (
+        '<tr><td style="padding:14px 30px 0 30px;">'
+        '<table width="100%" cellpadding="0" cellspacing="0">'
+        '<tr><td style="background-color:#fdf0e6; border:1px solid #e67e22; '
+        'border-radius:6px; padding:12px 16px;">'
+        '<p style="margin:0; color:#b9520c; font-size:13px; font-weight:bold;">'
+        '&#9888;&#65039; Raw Data Mode &mdash; Claude AI analysis skipped</p>'
+        '<p style="margin:6px 0 0 0; color:#8a4b18; font-size:12px;">'
+        f"The Anthropic API was unavailable ({reason}). This briefing shows the "
+        "underlying query data directly, without AI-generated commentary. Normal "
+        "AI analysis resumes automatically once API access is restored.</p>"
+        "</td></tr></table></td></tr>"
+    )
+
+    template = _load_template()
+    html_content = template.render(
+        report_date=today,
+        mode_notice=banner,
+        market_overview=sections.get("market_overview", "No data available."),
+        ml_model_health=sections.get("ml_model_health", "No data available."),
+        trade_opportunities=sections.get("trade_opportunities", "No data available."),
+        tech_signals=sections.get("tech_signals", "No data available."),
+        forex_outlook=sections.get("forex_outlook", "No data available."),
+        risk_warnings=sections.get("risk_warnings", "No data available."),
+        cross_strategy=sections.get("cross_strategy", "No data available."),
+    )
+
+    subject = f"Daily Trading Briefing (Raw Data) - {today}"
+
+    if dry_run:
+        out_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
+        os.makedirs(out_dir, exist_ok=True)
+        out_path = os.path.join(
+            out_dir, f"data_only_briefing_{date.today().isoformat()}.html"
+        )
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(html_content)
+        return f"[DRY RUN] Raw-data briefing written to {out_path} (email not sent)."
+
+    return _send_html_email(html_content, subject)
 
 
 def run_daily_briefing_with_rate_limiting() -> str:
@@ -302,6 +367,36 @@ def run_daily_briefing_with_rate_limiting() -> str:
         save_run_record(run_record)
         logger.error("Pipeline ABORTED due to critical pre-flight failures.")
         return "Pipeline aborted: critical pre-flight checks failed."
+
+    # =========================================================================
+    # Anthropic API Availability Probe
+    # If credits/access are unavailable, skip the LLM agents entirely and send
+    # a raw-data (no-LLM) briefing so recipients still get the underlying data.
+    # =========================================================================
+    api_available, api_reason = check_anthropic_live()
+    run_record["api_available"] = api_available
+    if not api_available:
+        logger.warning(
+            f"Anthropic API unavailable ({api_reason}). "
+            "Falling back to RAW DATA email (no Claude analysis)."
+        )
+        result = _compile_and_send_data_only_email(today, api_reason)
+        run_record["mode"] = "data_only"
+        run_record["email_sent"] = "successfully" in result.lower()
+        if run_record["email_sent"]:
+            run_record["email_recipients"] = get_email_recipients("daily_briefing")
+        run_record["status"] = "degraded_no_llm"
+        run_record["error"] = f"Anthropic API unavailable: {api_reason}"
+        run_record["finished_at"] = datetime.now().isoformat()
+        run_record["total_duration_sec"] = round(
+            (datetime.now() - pipeline_start).total_seconds(), 1
+        )
+        save_run_record(run_record)
+        logger.info(f"Raw-data fallback email result: {result}")
+        return result
+
+    logger.info("Anthropic API available — running full LLM agent pipeline.")
+    run_record["mode"] = "llm"
 
     # =========================================================================
     # Agent Pipeline — 8 agents with retry, timing, and graceful degradation
@@ -487,7 +582,19 @@ def run_daily_briefing_with_rate_limiting() -> str:
     logger.info("COMPILING REPORT & SENDING EMAIL")
     logger.info(f"{'=' * 60}")
 
-    result = _compile_and_send_email(agent_results, today)
+    # Safety net: if every agent failed (e.g. credits ran out mid-run), the LLM
+    # email would be all "analysis unavailable" placeholders. Send the raw-data
+    # briefing instead so recipients still get the underlying data.
+    if run_record["agents_succeeded"] == 0:
+        logger.warning(
+            "All agents failed — falling back to RAW DATA email (no Claude analysis)."
+        )
+        run_record["mode"] = "data_only_fallback"
+        result = _compile_and_send_data_only_email(
+            today, "all LLM agents failed (likely API/credit limit)"
+        )
+    else:
+        result = _compile_and_send_email(agent_results, today)
     run_record["email_sent"] = "successfully" in result.lower()
     if run_record["email_sent"]:
         recipients = get_email_recipients("daily_briefing")

@@ -62,6 +62,51 @@ def check_api_key() -> PreflightResult:
     )
 
 
+def check_anthropic_live(max_tokens: int = 1) -> tuple[bool, str]:
+    """Probe the Anthropic API with a minimal request to confirm credits/access.
+
+    This is a live billing/availability check (distinct from check_api_key, which
+    only validates that a key is *present*). Making a 1-token call costs a
+    negligible amount and reliably surfaces:
+      - credit/billing exhaustion ("credit balance is too low")
+      - authentication problems (bad/revoked key)
+      - rate/usage limits
+      - hard outages
+
+    Returns:
+        (available, reason) — available is True only if the call succeeded.
+        reason is empty when available, otherwise a short human-readable cause.
+    """
+    if not ANTHROPIC_API_KEY:
+        return False, "ANTHROPIC_API_KEY not set"
+
+    try:
+        import anthropic
+
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        client.messages.create(
+            model=LLM_MODEL,
+            max_tokens=max_tokens,
+            messages=[{"role": "user", "content": "ping"}],
+        )
+        return True, ""
+    except Exception as e:
+        # Classify the failure for clearer logging, but ANY failure means we
+        # should fall back to the no-LLM data-only email.
+        name = type(e).__name__
+        msg = str(e)
+        lowered = msg.lower()
+        if "credit balance is too low" in lowered or "billing" in lowered:
+            reason = "Anthropic credit balance exhausted"
+        elif "rate" in lowered and "limit" in lowered:
+            reason = "Anthropic rate/usage limit hit"
+        elif name in ("AuthenticationError", "PermissionDeniedError"):
+            reason = "Anthropic authentication failed"
+        else:
+            reason = f"{name}: {msg[:150]}"
+        return False, reason
+
+
 def check_sql_connection() -> PreflightResult:
     """Verify SQL Server is reachable."""
     try:

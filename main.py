@@ -9,6 +9,8 @@ and emails a comprehensive daily briefing.
 Usage:
     python main.py                  # Run the full daily briefing
     python main.py --dry-run        # Run without sending email (print to console)
+    python main.py --data-only      # Send raw-data briefing (no Claude/LLM analysis)
+    python main.py --data-only --dry-run  # Preview raw-data email to logs/ (no send)
     python main.py --test-sql       # Test SQL Server connectivity only
     python main.py --test-email     # Test email sending only
     python main.py --preflight      # Run pre-flight checks only
@@ -138,6 +140,29 @@ def run_daily_briefing(dry_run: bool = False):
         return False
 
 
+def run_data_only_briefing(dry_run: bool = False):
+    """Send the raw-data (no-LLM) briefing email directly, bypassing agents.
+
+    Useful for testing the fallback path or forcing a data-only send when the
+    Anthropic API is known to be down / out of credits.
+    """
+    from datetime import date
+    from crews.daily_briefing_crew import _compile_and_send_data_only_email
+
+    print("=" * 60)
+    print("RAW DATA BRIEFING (no Claude analysis)")
+    print("=" * 60)
+    if dry_run:
+        print("\n[DRY RUN MODE] Email will not be sent.\n")
+
+    today = date.today().strftime("%B %d, %Y")
+    result = _compile_and_send_data_only_email(
+        today, "manual --data-only run", dry_run=dry_run
+    )
+    print(f"\nResult: {result}")
+    return "successfully" in result.lower() or "[dry run]" in result.lower()
+
+
 def run_preflight_only():
     """Run only the pre-flight checks and report results."""
     from tools.preflight import run_preflight_checks
@@ -177,6 +202,11 @@ def main():
         help="Run pre-flight checks only (SQL, API key, data freshness, email)",
     )
     parser.add_argument(
+        "--data-only",
+        action="store_true",
+        help="Send the raw-data briefing email directly (no Claude/LLM analysis)",
+    )
+    parser.add_argument(
         "--status",
         nargs="?",
         const=10,
@@ -197,6 +227,10 @@ def main():
 
     if args.preflight:
         success = run_preflight_only()
+        sys.exit(0 if success else 1)
+
+    if args.data_only:
+        success = run_data_only_briefing(dry_run=args.dry_run)
         sys.exit(0 if success else 1)
 
     if args.status is not None:

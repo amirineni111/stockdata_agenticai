@@ -141,7 +141,10 @@ def print_status_report(last_n: int = 10) -> None:
         agents_fail = run.get("agents_failed", 0)
         email = "Yes" if run.get("email_sent") else "No"
 
-        status_icon = {"SUCCESS": "+", "PARTIAL": "~", "FAILED": "X", "RUNNING": ">"}.get(status, "?")
+        status_icon = {
+            "SUCCESS": "+", "PARTIAL": "~", "FAILED": "X", "RUNNING": ">",
+            "DEGRADED_NO_LLM": "!",
+        }.get(status, "?")
 
         print(f"\n  [{status_icon}] {started}  Status: {status}  Duration: {dur_str}")
         print(f"      Agents: {agents_ok}/8 succeeded, {agents_fail} failed  |  Email sent: {email}")
