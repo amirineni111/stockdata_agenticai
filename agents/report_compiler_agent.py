@@ -5,9 +5,10 @@ Compiles all agent findings into a structured HTML briefing
 and sends it via email.
 """
 
-from crewai import Agent, LLM
+from crewai import Agent
 
-from config.settings import LLM_MODEL, AGENT_MAX_ITER, AGENT_VERBOSE, AGENT_MAX_RPM
+from config.settings import AGENT_MAX_ITER, AGENT_VERBOSE, AGENT_MAX_RPM
+from config.llm_factory import build_llm
 from tools.email_tool import SendEmailTool
 
 
@@ -16,11 +17,7 @@ def create_report_compiler_agent() -> Agent:
 
     email_tool = SendEmailTool()
 
-    llm = LLM(
-        model=f"anthropic/{LLM_MODEL}",
-        max_tokens=8192,
-        temperature=0.4,
-    )
+    llm = build_llm(max_tokens=8192, temperature=0.4)
 
     agent = Agent(
         role="Financial Report Editor",

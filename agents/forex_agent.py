@@ -6,9 +6,10 @@ Stochastic) as primary signals, with ML predictions as confirmation.
 Forex follows patterns and technicals more reliably than equities.
 """
 
-from crewai import Agent, LLM
+from crewai import Agent
 
-from config.settings import LLM_MODEL, AGENT_MAX_ITER, AGENT_VERBOSE, AGENT_MAX_RPM
+from config.settings import AGENT_MAX_ITER, AGENT_VERBOSE, AGENT_MAX_RPM
+from config.llm_factory import build_llm
 from config.sql_queries import FOREX_QUERIES
 from tools.sql_tool import PredefinedSQLQueryTool
 
@@ -26,11 +27,7 @@ def create_forex_agent() -> Agent:
         query_set=FOREX_QUERIES,
     )
 
-    llm = LLM(
-        model=f"anthropic/{LLM_MODEL}",
-        max_tokens=2000,
-        temperature=0.3,
-    )
+    llm = build_llm(max_tokens=2000, temperature=0.3)
 
     agent = Agent(
         role="Forex Technical Analyst & ML Specialist",

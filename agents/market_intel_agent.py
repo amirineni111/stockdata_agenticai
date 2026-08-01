@@ -5,9 +5,10 @@ Analyzes latest price action, volume patterns, and market trends
 across NSE 500, NASDAQ 100.
 """
 
-from crewai import Agent, LLM
+from crewai import Agent
 
-from config.settings import LLM_MODEL, AGENT_MAX_ITER, AGENT_VERBOSE, AGENT_MAX_RPM
+from config.settings import AGENT_MAX_ITER, AGENT_VERBOSE, AGENT_MAX_RPM
+from config.llm_factory import build_llm
 from config.sql_queries import MARKET_INTEL_QUERIES
 from tools.sql_tool import PredefinedSQLQueryTool
 
@@ -26,11 +27,7 @@ def create_market_intel_agent() -> Agent:
         query_set=MARKET_INTEL_QUERIES,
     )
 
-    llm = LLM(
-        model=f"anthropic/{LLM_MODEL}",
-        max_tokens=1500,
-        temperature=0.3,
-    )
+    llm = build_llm(max_tokens=1500, temperature=0.3)
 
     agent = Agent(
         role="Senior Market Analyst",

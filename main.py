@@ -11,6 +11,7 @@ Usage:
     python main.py --dry-run        # Run without sending email (print to console)
     python main.py --data-only      # Send raw-data briefing (no Claude/LLM analysis)
     python main.py --data-only --dry-run  # Preview raw-data email to logs/ (no send)
+    python main.py --data-only --email-to me@x.com  # Test send to one address only
     python main.py --test-sql       # Test SQL Server connectivity only
     python main.py --test-email     # Test email sending only
     python main.py --preflight      # Run pre-flight checks only
@@ -140,11 +141,15 @@ def run_daily_briefing(dry_run: bool = False):
         return False
 
 
-def run_data_only_briefing(dry_run: bool = False):
+def run_data_only_briefing(dry_run: bool = False, email_to: str | None = None):
     """Send the raw-data (no-LLM) briefing email directly, bypassing agents.
 
     Useful for testing the fallback path or forcing a data-only send when the
     Anthropic API is known to be down / out of credits.
+
+    Args:
+        email_to: Comma-separated override for the recipient list. Bypasses the
+            email_recipients table so a test send cannot reach the real list.
     """
     from datetime import date
     from crews.daily_briefing_crew import _compile_and_send_data_only_email
@@ -155,9 +160,14 @@ def run_data_only_briefing(dry_run: bool = False):
     if dry_run:
         print("\n[DRY RUN MODE] Email will not be sent.\n")
 
+    recipients = None
+    if email_to:
+        recipients = [a.strip() for a in email_to.split(",") if a.strip()]
+        print(f"\n[TEST SEND] Overriding recipients -> {', '.join(recipients)}\n")
+
     today = date.today().strftime("%B %d, %Y")
     result = _compile_and_send_data_only_email(
-        today, "manual --data-only run", dry_run=dry_run
+        today, "manual --data-only run", dry_run=dry_run, recipients=recipients
     )
     print(f"\nResult: {result}")
     return "successfully" in result.lower() or "[dry run]" in result.lower()
@@ -207,6 +217,14 @@ def main():
         help="Send the raw-data briefing email directly (no Claude/LLM analysis)",
     )
     parser.add_argument(
+        "--email-to",
+        metavar="ADDR[,ADDR...]",
+        help=(
+            "With --data-only: send to these addresses instead of the configured "
+            "distribution list (test sends). Subject is prefixed with [TEST]."
+        ),
+    )
+    parser.add_argument(
         "--status",
         nargs="?",
         const=10,
@@ -230,7 +248,7 @@ def main():
         sys.exit(0 if success else 1)
 
     if args.data_only:
-        success = run_data_only_briefing(dry_run=args.dry_run)
+        success = run_data_only_briefing(dry_run=args.dry_run, email_to=args.email_to)
         sys.exit(0 if success else 1)
 
     if args.status is not None:

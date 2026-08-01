@@ -4,9 +4,10 @@ Role: Technical Analysis Specialist
 Identifies active buy/sell signals and tracks historical signal outcomes.
 """
 
-from crewai import Agent, LLM
+from crewai import Agent
 
-from config.settings import LLM_MODEL, AGENT_MAX_ITER, AGENT_VERBOSE, AGENT_MAX_RPM
+from config.settings import AGENT_MAX_ITER, AGENT_VERBOSE, AGENT_MAX_RPM
+from config.llm_factory import build_llm
 from config.sql_queries import TECH_SIGNAL_QUERIES
 from tools.sql_tool import PredefinedSQLQueryTool
 
@@ -24,11 +25,7 @@ def create_tech_signal_agent() -> Agent:
         query_set=TECH_SIGNAL_QUERIES,
     )
 
-    llm = LLM(
-        model=f"anthropic/{LLM_MODEL}",
-        max_tokens=1500,
-        temperature=0.2,
-    )
+    llm = build_llm(max_tokens=1500, temperature=0.2)
 
     agent = Agent(
         role="Technical Analysis Specialist",

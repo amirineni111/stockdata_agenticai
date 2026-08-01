@@ -5,9 +5,10 @@ Computes and presents fair value estimates using multiple valuation models
 (Graham Number, PEG, Forward Earnings, EPV) for NASDAQ and NSE stocks.
 """
 
-from crewai import Agent, LLM
+from crewai import Agent
 
-from config.settings import LLM_MODEL, AGENT_MAX_ITER, AGENT_VERBOSE, AGENT_MAX_RPM
+from config.settings import AGENT_MAX_ITER, AGENT_VERBOSE, AGENT_MAX_RPM
+from config.llm_factory import build_llm
 from config.sql_queries import VALUATION_QUERIES
 from tools.sql_tool import PredefinedSQLQueryTool
 
@@ -25,11 +26,7 @@ def create_valuation_agent() -> Agent:
         query_set=VALUATION_QUERIES,
     )
 
-    llm = LLM(
-        model=f"anthropic/{LLM_MODEL}",
-        max_tokens=1500,
-        temperature=0.2,
-    )
+    llm = build_llm(max_tokens=1500, temperature=0.2)
 
     agent = Agent(
         role="Fundamental Valuation Analyst",

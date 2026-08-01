@@ -28,8 +28,9 @@ from datetime import datetime
 # Add project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from crewai import Agent, Crew, Task, Process, LLM
-from config.settings import LLM_MODEL, AGENT_VERBOSE, AGENT_MAX_RPM
+from crewai import Agent, Crew, Task, Process
+from config.settings import AGENT_VERBOSE, AGENT_MAX_RPM
+from config.llm_factory import build_llm
 from config.sql_queries import (
     MARKET_INTEL_QUERIES,
     ML_ANALYST_QUERIES,
@@ -82,11 +83,7 @@ def create_chat_agent() -> Agent:
     pnl_tool = PnLCalculatorTool()
     rr_tool = RiskRewardCalculatorTool()
 
-    llm = LLM(
-        model=f"anthropic/{LLM_MODEL}",
-        max_tokens=1500,
-        temperature=0.3,
-    )
+    llm = build_llm(max_tokens=1500, temperature=0.3)
 
     agent = Agent(
         role="Stock Data AI Assistant",

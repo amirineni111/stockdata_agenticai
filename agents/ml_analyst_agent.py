@@ -6,9 +6,10 @@ Evaluates accuracy and health of:
   - Strategy 1: ML Buy/Sell Classifier models (NASDAQ + NSE + Forex)
 """
 
-from crewai import Agent, LLM
+from crewai import Agent
 
-from config.settings import LLM_MODEL, AGENT_MAX_ITER, AGENT_VERBOSE, AGENT_MAX_RPM
+from config.settings import AGENT_MAX_ITER, AGENT_VERBOSE, AGENT_MAX_RPM
+from config.llm_factory import build_llm
 from config.sql_queries import ML_ANALYST_QUERIES
 from tools.sql_tool import PredefinedSQLQueryTool
 from tools.calculation_tools import AccuracyCalculatorTool
@@ -29,11 +30,7 @@ def create_ml_analyst_agent() -> Agent:
 
     accuracy_tool = AccuracyCalculatorTool()
 
-    llm = LLM(
-        model=f"anthropic/{LLM_MODEL}",
-        max_tokens=1500,
-        temperature=0.2,
-    )
+    llm = build_llm(max_tokens=1500, temperature=0.2)
 
     agent = Agent(
         role="Machine Learning Performance Analyst",

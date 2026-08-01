@@ -210,11 +210,22 @@ def _markdown_to_html(text: str) -> str:
     return "\n".join(html_lines)
 
 
-def _send_html_email(html_content: str, subject: str) -> str:
-    """Send a pre-rendered HTML email via SMTP to the daily-briefing recipients."""
+def _send_html_email(
+    html_content: str, subject: str, recipients: list[str] | None = None
+) -> str:
+    """Send a pre-rendered HTML email via SMTP to the daily-briefing recipients.
+
+    Args:
+        recipients: Override the configured distribution list. When given, every
+            address is put in TO and the email_recipients table is ignored —
+            used for test sends so a preview never reaches the real list.
+    """
     try:
-        # Get recipients grouped by type (TO/CC/BCC)
-        by_type = get_email_recipients_by_type("daily_briefing")
+        if recipients:
+            by_type = {"TO": list(recipients), "CC": [], "BCC": []}
+        else:
+            # Get recipients grouped by type (TO/CC/BCC)
+            by_type = get_email_recipients_by_type("daily_briefing")
         all_recipients = by_type["TO"] + by_type["CC"] + by_type["BCC"]
         if not all_recipients:
             return "Error: No email recipients configured in database or .env"
@@ -274,7 +285,12 @@ def _compile_and_send_email(agent_results: dict, today: str) -> str:
     return _send_html_email(html_content, subject)
 
 
-def _compile_and_send_data_only_email(today: str, reason: str, dry_run: bool = False) -> str:
+def _compile_and_send_data_only_email(
+    today: str,
+    reason: str,
+    dry_run: bool = False,
+    recipients: list[str] | None = None,
+) -> str:
     """Compile a NO-LLM raw-data briefing and send it.
 
     Used when the Anthropic API is unavailable (credit/token limit, auth,
@@ -282,7 +298,8 @@ def _compile_and_send_data_only_email(today: str, reason: str, dry_run: bool = F
     renders the results as HTML tables — no Claude analysis.
 
     When dry_run is True the rendered HTML is written to logs/ instead of
-    being emailed.
+    being emailed. When recipients is given, it replaces the configured
+    distribution list (test sends).
     """
     from tools.fallback_report import build_data_only_sections
 
@@ -316,6 +333,8 @@ def _compile_and_send_data_only_email(today: str, reason: str, dry_run: bool = F
     )
 
     subject = f"Daily Trading Briefing (Raw Data) - {today}"
+    if recipients:
+        subject = f"[TEST] {subject}"
 
     if dry_run:
         out_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
@@ -327,7 +346,7 @@ def _compile_and_send_data_only_email(today: str, reason: str, dry_run: bool = F
             f.write(html_content)
         return f"[DRY RUN] Raw-data briefing written to {out_path} (email not sent)."
 
-    return _send_html_email(html_content, subject)
+    return _send_html_email(html_content, subject, recipients=recipients)
 
 
 def run_daily_briefing_with_rate_limiting() -> str:

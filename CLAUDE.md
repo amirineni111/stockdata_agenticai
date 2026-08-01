@@ -312,7 +312,10 @@ All loaded from `.env` via `python-dotenv` in `config/settings.py`:
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `ANTHROPIC_API_KEY` | — | Claude API key |
-| `LLM_MODEL` | `claude-sonnet-4-6` | Model identifier |
+| `LLM_MODEL` | `claude-sonnet-4-6` | Active model for all agents — set to `claude-fable-5` to switch (see §8 Dual-Model Support) |
+| `LLM_MODEL_SONNET` | `claude-sonnet-4-6` | Name of the Sonnet-family model `check_model_access.py` probes |
+| `LLM_MODEL_FABLE` | `claude-fable-5` | Name of the Fable-family model `check_model_access.py` probes |
+| `LLM_THINKING_MIN_MAX_TOKENS` | `8000` | max_tokens floor applied on always-thinking models |
 | `SQL_SERVER` | `192.168.86.55\MSSQLSERVER01` | SQL Server host (Machine A LAN IP) |
 | `SQL_DATABASE` | `stockdata_db` | Database name |
 | `SQL_DRIVER` | `{ODBC Driver 17 for SQL Server}` | ODBC driver |
@@ -341,11 +344,43 @@ All loaded from `.env` via `python-dotenv` in `config/settings.py`:
 ```python
 def create_*_agent() -> Agent:
     tool = PredefinedSQLQueryTool(name=..., query_set=DOMAIN_QUERIES)
-    llm = LLM(model=f"anthropic/{LLM_MODEL}", max_tokens=1500, temperature=0.2-0.3)
+    llm = build_llm(max_tokens=1500, temperature=0.2-0.3)   # config.llm_factory
     return Agent(role=..., goal=..., backstory=..., tools=[tool], llm=llm,
                  verbose=AGENT_VERBOSE, max_iter=AGENT_MAX_ITER,
                  max_rpm=AGENT_MAX_RPM, allow_delegation=False, inject_date=True)
 ```
+
+Agents never construct `crewai.LLM` directly and never import `LLM_MODEL` — they
+declare the temperature and token budget they *want*, and `build_llm()` reconciles
+that with the active model's API surface.
+
+### Dual-Model Support (Sonnet + Fable)
+`LLM_MODEL` in `.env` selects the model for all 8 agents and the chat assistant.
+Two generations with incompatible request surfaces are supported:
+
+| | `claude-sonnet-4-6` | `claude-fable-5` |
+|---|---|---|
+| `temperature` | sent | **rejected (HTTP 400)** — dropped by `build_llm()` |
+| Extended thinking | off | **always on**, cannot be disabled |
+| `max_tokens` | as requested | raised to `LLM_THINKING_MIN_MAX_TOKENS` (8000) — thinking tokens are billed against the same budget, so a 1500-token cap would be consumed before any answer |
+| Cost (in/out per MTok) | $3 / $15 | $10 / $50 |
+
+Implementation:
+- `config/settings.py` — model-family prefix lists + `model_rejects_temperature()`,
+  `model_always_thinks()`, `resolve_max_tokens()`. No CrewAI import, so the
+  standalone report scripts stay Claude-free.
+- `config/llm_factory.py` — `build_llm()` (the single `crewai.LLM` construction
+  point) and `describe_active_model()` (used by preflight logging).
+- `check_model_access.py` — probes which models the key can actually reach.
+  Run it before switching `LLM_MODEL`; credit balance is **account-wide**, not
+  per-model, so a zero balance blocks every model regardless of Fable credits.
+
+To add another model, extend the prefix tuples in `config/settings.py` — no agent
+file changes required.
+
+**Fable cost warning:** a full briefing run is 8 agents; at the 8000-token floor
+plus Fable's $50/MTok output rate, one run costs materially more than on Sonnet.
+The 60s inter-agent pause is tuned for Sonnet's token rate and may need widening.
 
 ### SQL Query Organization
 - Queries live in `config/sql_queries.py` as raw SQL strings in domain-specific dicts

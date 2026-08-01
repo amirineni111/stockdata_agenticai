@@ -9,9 +9,10 @@ freshest signals, which look ahead to the next trading day. There is NO outcome 
 because tomorrow has not happened yet.
 
 Forex only has Strategy 1 (there is no AI ensemble / S2 for forex), so there is a SINGLE
-section. Predictions are grouped by signal DIRECTION (Buy / Sell) rather than price bucket
-— forex pairs span very different price scales (EURUSD ~1.08 vs USDJPY ~150), so price
-buckets are meaningless. HOLD signals are excluded (no directional view).
+section. Predictions are grouped by signal DIRECTION (Buy / Sell / Hold) rather than price
+bucket — forex pairs span very different price scales (EURUSD ~1.08 vs USDJPY ~150), so
+price buckets are meaningless. HOLD signals carry no directional view but are included so
+the report covers every pair the model scored.
 
 Each row shows the predicted direction, the model confidence, and the latest close price
 the prediction is based on.
@@ -61,7 +62,10 @@ CFG = {
 }
 
 # Grid rows = signal direction (replaces the price buckets of the NASDAQ/NSE report)
-DIRECTIONS = ["Buy", "Sell"]
+DIRECTIONS = ["Buy", "Sell", "Hold"]
+
+# Direction -> display colour (green up / red down / amber neutral)
+DIRECTION_COLORS = {"Buy": "#27ae60", "Sell": "#e74c3c", "Hold": "#f39c12"}
 
 
 # ---------------------------------------------------------------------------
@@ -97,19 +101,23 @@ def get_latest_pred_date(conn, cfg):
 
 
 def fetch_signals(conn, cfg, pred_date):
-    """One row per pair for BUY/SELL forex ML predictions on the latest prediction date."""
+    """One row per pair for BUY/SELL/HOLD forex ML predictions on the latest prediction date."""
     if not pred_date:
         return []
 
     sql = f"""
         SELECT
-            CASE WHEN predicted_signal IN ('Buy', 'BUY') THEN 'Buy' ELSE 'Sell' END AS direction,
+            CASE
+                WHEN predicted_signal IN ('Buy', 'BUY') THEN 'Buy'
+                WHEN predicted_signal IN ('Sell', 'SELL') THEN 'Sell'
+                ELSE 'Hold'
+            END AS direction,
             currency_pair AS ticker,
             ROUND(CAST(signal_confidence AS FLOAT) * 100, 1) AS confidence_pct,
             CAST(close_price AS FLOAT) AS pred_day_price
         FROM {cfg['ml_table']}
         WHERE CAST(prediction_date AS DATE) = ?
-          AND predicted_signal IN ('Buy', 'BUY', 'Sell', 'SELL')
+          AND predicted_signal IN ('Buy', 'BUY', 'Sell', 'SELL', 'Hold', 'HOLD')
           AND close_price IS NOT NULL
     """
     cur = conn.cursor()
@@ -119,7 +127,7 @@ def fetch_signals(conn, cfg, pred_date):
         rows.append({
             "direction": r.direction,
             "ticker": r.ticker,
-            "predicted_signal": r.direction,  # already normalized to Buy/Sell
+            "predicted_signal": r.direction,  # already normalized to Buy/Sell/Hold
             "confidence_pct": r.confidence_pct,
             "pred_day_price": r.pred_day_price,
         })
@@ -130,10 +138,6 @@ def fetch_signals(conn, cfg, pred_date):
 # ---------------------------------------------------------------------------
 # Assemble report structure
 # ---------------------------------------------------------------------------
-def _is_buy(signal):
-    return signal.strip().upper().startswith("B")
-
-
 def build_sections(cfg, pred_date, signals):
     """Build the single S1 section: a direction-count matrix + one detail table."""
 
@@ -156,7 +160,7 @@ def build_sections(cfg, pred_date, signals):
             "bucket": direction,
             "cells": [
                 {"text": str(n) if n else "—",
-                 "color": ("#27ae60" if direction == "Buy" else "#e74c3c") if n else "#bbbbbb"},
+                 "color": DIRECTION_COLORS[direction] if n else "#bbbbbb"},
             ],
         })
 
@@ -169,12 +173,11 @@ def build_sections(cfg, pred_date, signals):
             reverse=True,
         )
         for s in day_rows:
-            buy = _is_buy(s["predicted_signal"])
             rows_out.append({
                 "bucket": direction,
                 "ticker": s["ticker"],
-                "direction": "Buy" if buy else "Sell",
-                "dir_color": "#27ae60" if buy else "#e74c3c",
+                "direction": direction,
+                "dir_color": DIRECTION_COLORS[direction],
                 "confidence": fmt_conf(s["confidence_pct"]),
                 "price": fmt_price(s["pred_day_price"]),
             })
@@ -182,8 +185,9 @@ def build_sections(cfg, pred_date, signals):
     section = {
         "key": "S1",
         "title": "S1 Predictions Only",
-        "subtitle": "Forex ML classifier Buy/Sell signals, grouped by direction. HOLD signals excluded.",
+        "subtitle": "Forex ML classifier Buy/Sell/Hold signals, grouped by direction.",
         "col_headers": ["Count"],
+        "matrix": matrix,
         "rows": rows_out,
     }
     return [section]
@@ -245,9 +249,9 @@ def run(dry_run=False):
     sections = build_sections(cfg, pred_date, signals)
     html = render_html(cfg, pred_date, sections)
 
-    buy_count = sum(1 for s in signals if s["direction"] == "Buy")
-    sell_count = sum(1 for s in signals if s["direction"] == "Sell")
-    print(f"[forex] pred_date={pred_date} | Buy rows={buy_count} Sell rows={sell_count}")
+    counts = {d: sum(1 for s in signals if s["direction"] == d) for d in DIRECTIONS}
+    print(f"[forex] pred_date={pred_date} | "
+          + " ".join(f"{d} rows={counts[d]}" for d in DIRECTIONS))
 
     subject = f"{cfg['market_name']} ML Tomorrow Predictions — {pred_date.strftime('%b %d, %Y')}"
 

@@ -6,9 +6,10 @@ Finds the best trade opportunities from BOTH strategies:
   - Strategy 1: ML Buy/Sell classifier top signals (NASDAQ + NSE)
 """
 
-from crewai import Agent, LLM
+from crewai import Agent
 
-from config.settings import LLM_MODEL, AGENT_MAX_ITER, AGENT_VERBOSE, AGENT_MAX_RPM
+from config.settings import AGENT_MAX_ITER, AGENT_VERBOSE, AGENT_MAX_RPM
+from config.llm_factory import build_llm
 from config.sql_queries import STRATEGY_TRADE_QUERIES
 from tools.sql_tool import PredefinedSQLQueryTool
 from tools.calculation_tools import RiskRewardCalculatorTool
@@ -29,11 +30,7 @@ def create_strategy_trade_agent() -> Agent:
 
     risk_reward_tool = RiskRewardCalculatorTool()
 
-    llm = LLM(
-        model=f"anthropic/{LLM_MODEL}",
-        max_tokens=1500,
-        temperature=0.3,
-    )
+    llm = build_llm(max_tokens=1500, temperature=0.3)
 
     agent = Agent(
         role="Trading Strategy Manager",

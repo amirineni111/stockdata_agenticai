@@ -21,6 +21,7 @@ from config.settings import (
     EMAIL_TO,
     get_sql_connection_string,
     get_email_recipients,
+    model_always_thinks,
 )
 
 
@@ -55,14 +56,16 @@ def check_api_key() -> PreflightResult:
             "ANTHROPIC_API_KEY appears too short — check .env",
             critical=True,
         )
+    from config.llm_factory import describe_active_model
+
     return PreflightResult(
         "Anthropic API Key",
         True,
-        f"Set (model: {LLM_MODEL})",
+        f"Set ({describe_active_model()})",
     )
 
 
-def check_anthropic_live(max_tokens: int = 1) -> tuple[bool, str]:
+def check_anthropic_live(max_tokens: int | None = None) -> tuple[bool, str]:
     """Probe the Anthropic API with a minimal request to confirm credits/access.
 
     This is a live billing/availability check (distinct from check_api_key, which
@@ -73,12 +76,20 @@ def check_anthropic_live(max_tokens: int = 1) -> tuple[bool, str]:
       - rate/usage limits
       - hard outages
 
+    Args:
+        max_tokens: Probe budget. Defaults to 1 token, except on always-thinking
+            models (Fable/Opus 5) where the API rejects a budget that cannot fit
+            a thinking block — those probe with a small but viable budget.
+
     Returns:
         (available, reason) — available is True only if the call succeeded.
         reason is empty when available, otherwise a short human-readable cause.
     """
     if not ANTHROPIC_API_KEY:
         return False, "ANTHROPIC_API_KEY not set"
+
+    if max_tokens is None:
+        max_tokens = 1024 if model_always_thinks() else 1
 
     try:
         import anthropic
